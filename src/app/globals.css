@@ -1,1 +1,135 @@
 @import "tailwindcss";
+
+@theme {
+  /* Application Color Palette (Premium Indigo/Emerald/Slate) */
+  --color-primary-50: oklch(0.97 0.01 240);
+  --color-primary-100: oklch(0.94 0.02 240);
+  --color-primary-200: oklch(0.88 0.05 240);
+  --color-primary-300: oklch(0.81 0.08 240);
+  --color-primary-400: oklch(0.72 0.12 240);
+  --color-primary-500: oklch(0.62 0.16 240);
+  --color-primary-600: oklch(0.53 0.18 240);
+  --color-primary-700: oklch(0.44 0.19 240);
+  --color-primary-800: oklch(0.36 0.19 240);
+  --color-primary-900: oklch(0.28 0.18 240);
+  --color-primary-950: oklch(0.20 0.16 240);
+
+  --color-accent-50: oklch(0.97 0.01 180);
+  --color-accent-100: oklch(0.93 0.03 180);
+  --color-accent-200: oklch(0.87 0.06 180);
+  --color-accent-300: oklch(0.79 0.10 180);
+  --color-accent-400: oklch(0.70 0.14 180);
+  --color-accent-500: oklch(0.60 0.18 180);
+  --color-accent-600: oklch(0.51 0.19 180);
+  --color-accent-700: oklch(0.43 0.19 180);
+  --color-accent-800: oklch(0.35 0.19 180);
+  --color-accent-900: oklch(0.28 0.18 180);
+  --color-accent-950: oklch(0.21 0.16 180);
+
+  /* Semantic UI Colors mapped to utilities */
+  --color-background: white;
+  --color-foreground: oklch(0.2 0.02 240);
+  --color-card: white;
+  --color-card-foreground: oklch(0.2 0.02 240);
+  --color-primary: oklch(0.6 0.16 240);
+  --color-primary-foreground: white;
+  --color-secondary: oklch(0.95 0.01 240);
+  --color-secondary-foreground: oklch(0.2 0.02 240);
+  --color-muted: oklch(0.95 0.01 240);
+  --color-muted-foreground: oklch(0.5 0.02 240);
+  --color-accent: oklch(0.6 0.18 180);
+  --color-accent-foreground: white;
+  --color-destructive: oklch(0.6 0.2 0);
+  --color-destructive-foreground: white;
+  --color-border: oklch(0.9 0.01 240);
+  --color-input: oklch(0.9 0.01 240);
+  --color-ring: oklch(0.6 0.16 240);
+
+  /* Shared Effects */
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-3xl: 2.5rem;
+
+  /* Custom Animations */
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-glow: glow 2s ease-in-out infinite;
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes glow {
+    0%, 100% { opacity: 0.5; filter: blur(8px); }
+    50% { opacity: 0.8; filter: blur(12px); }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-primary-100 selection:text-primary-900;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight text-slate-900;
+  }
+}
+
+@layer components {
+  /* Premium Glassmorphic Surfaces */
+  .glass {
+    @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-xl;
+  }
+  
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)];
+  }
+
+  .glass-sidebar {
+    @apply bg-white/40 backdrop-blur-2xl border-r border-white/20;
+  }
+
+  .glass-nav {
+    @apply bg-white/60 backdrop-blur-lg border-b border-white/20;
+  }
+
+  /* Interaction Utilities */
+  .btn-premium {
+    @apply relative overflow-hidden transition-all duration-300 active:scale-95 hover:shadow-lg hover:shadow-primary-500/25;
+  }
+
+  .btn-premium::after {
+    content: "";
+    @apply absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full transition-transform duration-500;
+  }
+
+  .btn-premium:hover::after {
+    @apply translate-x-full;
+  }
+}
+
+/* Custom Utilities for Layout Control */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors;
+}

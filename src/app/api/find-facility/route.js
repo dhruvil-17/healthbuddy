@@ -1,38 +1,22 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-)
-
-// Helper function to calculate distance between two points (Haversine formula)
-function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371 // Earth's radius in kilometers
-  const dLat = (lat2 - lat1) * Math.PI / 180
-  const dLon = (lon2 - lon1) * Math.PI / 180
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2)
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-  return R * c
-}
+import { createClient, getSessionUser } from '@/lib/supabase-server'
 
 export async function GET(request) {
   try {
+    const user = await getSessionUser()
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('userId')
     const city = searchParams.get('city')
     const facilityType = searchParams.get('type') || 'all'
     const radius = parseInt(searchParams.get('radius')) || 10
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      )
-    }
+    const supabase = await createClient()
 
     if (!city) {
       return NextResponse.json(
@@ -70,12 +54,12 @@ export async function GET(request) {
       return a.name.localeCompare(b.name)
     })
 
-    // Save search history
+    // Save search history (using session-validated user ID)
     await supabase
       .from('user_facility_searches')
       .insert([
         {
-          user_id: userId,
+          user_id: user.id,
           search_location: city,
           facility_type: facilityType,
           search_radius: radius,
@@ -101,19 +85,22 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const { userId, limit = 10 } = await request.json()
-
-    if (!userId) {
+    const user = await getSessionUser()
+    
+    if (!user) {
       return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
+        { error: 'Unauthorized' },
+        { status: 401 }
       )
     }
+
+    const { limit = 10 } = await request.json()
+    const supabase = await createClient()
 
     const { data: searches, error } = await supabase
       .from('user_facility_searches')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', user.id) // Strict session-based filter
       .order('created_at', { ascending: false })
       .limit(limit)
 

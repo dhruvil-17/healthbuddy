@@ -18,12 +18,11 @@ export default function ProfilePage() {
 
   const handleSave = async (profileData) => {
     try {
-      const updatedProfile = await updateUserProfile(profile.id, profileData);
+      const updatedProfile = await updateUserProfile(profileData);
       setProfile(updatedProfile);
       router.push('/dashboard'); 
     } catch (error) {
       console.error('Error saving profile:', error);
-  
     }
   };
 

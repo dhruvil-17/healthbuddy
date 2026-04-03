@@ -1,30 +1,26 @@
-// app/api/medicine-reminders/route.js
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-)
+import { createClient, getSessionUser } from '@/lib/supabase-server'
 
 // Get user's medicine reminders
 export async function GET(request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('userId')
-    const activeOnly = searchParams.get('activeOnly') === 'true'
-
-    if (!userId) {
+    const user = await getSessionUser()
+    
+    if (!user) {
       return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
+        { error: 'Unauthorized' },
+        { status: 401 }
       )
     }
+
+    const { searchParams } = new URL(request.url)
+    const activeOnly = searchParams.get('activeOnly') === 'true'
+    const supabase = await createClient()
 
     let query = supabase
       .from('medicine_reminders')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', user.id) // Strict session-based filter
       .order('created_at', { ascending: false })
 
     if (activeOnly) {
@@ -33,9 +29,7 @@ export async function GET(request) {
 
     const { data: reminders, error } = await query
 
-    if (error) {
-      throw error
-    }
+    if (error) throw error
 
     return NextResponse.json({
       success: true,
@@ -54,8 +48,16 @@ export async function GET(request) {
 // Create new medicine reminder
 export async function POST(request) {
   try {
+    const user = await getSessionUser()
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const { 
-      userId, 
       medicineName, 
       dosage, 
       frequency, 
@@ -65,33 +67,32 @@ export async function POST(request) {
       notes 
     } = await request.json()
 
-    if (!userId || !medicineName || !dosage || !frequency || !times || !startDate) {
+    if (!medicineName || !dosage || !frequency || !times || !startDate) {
       return NextResponse.json(
         { error: 'Required fields are missing' },
         { status: 400 }
       )
     }
 
+    const supabase = await createClient()
     const { data: reminder, error } = await supabase
       .from('medicine_reminders')
       .insert([
         {
-          user_id: userId,
+          user_id: user.id, // Derived from session
           medicine_name: medicineName,
           dosage: dosage,
           frequency: frequency,
           times: times,
           start_date: startDate,
-          end_date: endDate,
-          notes: notes
+          end_date: endDate || null,
+          notes: notes || null
         }
       ])
       .select()
       .single()
 
-    if (error) {
-      throw error
-    }
+    if (error) throw error
 
     return NextResponse.json({
       success: true,
@@ -110,9 +111,17 @@ export async function POST(request) {
 // Update medicine reminder
 export async function PUT(request) {
   try {
+    const user = await getSessionUser()
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const { 
       reminderId, 
-      userId,
       medicineName, 
       dosage, 
       frequency, 
@@ -123,12 +132,14 @@ export async function PUT(request) {
       isActive
     } = await request.json()
 
-    if (!reminderId || !userId) {
+    if (!reminderId) {
       return NextResponse.json(
-        { error: 'Reminder ID and User ID are required' },
+        { error: 'Reminder ID is required' },
         { status: 400 }
       )
     }
+
+    const supabase = await createClient()
 
     const updateData = {}
     if (medicineName !== undefined) updateData.medicine_name = medicineName
@@ -139,18 +150,17 @@ export async function PUT(request) {
     if (endDate !== undefined) updateData.end_date = endDate
     if (notes !== undefined) updateData.notes = notes
     if (isActive !== undefined) updateData.is_active = isActive
+    updateData.updated_at = new Date().toISOString()
 
     const { data: reminder, error } = await supabase
       .from('medicine_reminders')
       .update(updateData)
       .eq('id', reminderId)
-      .eq('user_id', userId)
+      .eq('user_id', user.id) // Ensure user only updates their own reminder
       .select()
       .single()
 
-    if (error) {
-      throw error
-    }
+    if (error) throw error
 
     return NextResponse.json({
       success: true,
@@ -169,13 +179,22 @@ export async function PUT(request) {
 // Delete medicine reminder
 export async function DELETE(request) {
   try {
+    const user = await getSessionUser()
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const reminderId = searchParams.get('reminderId')
-    const userId = searchParams.get('userId')
+    const supabase = await createClient()
 
-    if (!reminderId || !userId) {
+    if (!reminderId) {
       return NextResponse.json(
-        { error: 'Reminder ID and User ID are required' },
+        { error: 'Reminder ID is required' },
         { status: 400 }
       )
     }
@@ -184,11 +203,9 @@ export async function DELETE(request) {
       .from('medicine_reminders')
       .delete()
       .eq('id', reminderId)
-      .eq('user_id', userId)
+      .eq('user_id', user.id) // Ensure user only deletes their own reminder
 
-    if (error) {
-      throw error
-    }
+    if (error) throw error
 
     return NextResponse.json({
       success: true,

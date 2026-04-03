@@ -1,13 +1,26 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Heart, Eye, EyeOff } from 'lucide-react'
-import { getCurrentUser, signUp } from '../../../lib/auth'
-import Button from '../../../components/ui/Button'
-import Input from '../../../components/ui/Input'
-import Loader from '@/components/ui/Loader'
-import { supabase } from '@/lib/supabase'
+import { 
+  Heart, 
+  Eye, 
+  EyeOff, 
+  Mail, 
+  Lock, 
+  User, 
+  ArrowRight, 
+  Sparkles,
+  ShieldCheck,
+  CheckCircle2,
+  ArrowLeft,
+  AlertCircle
+} from 'lucide-react'
+import { signUp } from '@/lib/auth'
+import Button from '@/components/ui/Button'
+import Input from '@/components/ui/Input'
+import GlassCard from '@/components/ui/GlassCard'
+import Badge from '@/components/ui/Badge'
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -19,52 +32,8 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [isSuccess, setIsSuccess] = useState(false)
   const router = useRouter()
-  const [authLoading, setAuthLoading] = useState(true)
-    const [shouldShowLogin, setShouldShowLogin] = useState(false)
-
-  useEffect(() => {
-    const checkUserAndProfile = async () => {
-      try {
-        setAuthLoading(true)
-        const currentUser = await getCurrentUser()
-     
-        if (!currentUser) {
-          setShouldShowLogin(true)
-          setAuthLoading(false)
-          return
-        }
-
-        // User exists, check profile
-        const { data: profileData } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('id', currentUser.id)
-          .single()
-
-
-        if (!profileData) {
-          // User exists but hasn't completed onboarding
-          router.replace('/onboarding')
-        } else {
-          // User is fully authenticated and has profile
-          router.replace('/dashboard')
-        }
-      } catch (error) {
-        console.error('Error checking auth:', error)
-        // On error, show login page
-        setShouldShowLogin(true)
-        setAuthLoading(false)
-      }
-    }
-
-    checkUserAndProfile()
-  }, [router])
-
-
-       if (authLoading || !shouldShowLogin) {
-         return <Loader />
-       }
 
   const handleChange = (e) => {
     setFormData({
@@ -90,79 +59,125 @@ export default function RegisterPage() {
       return
     }
 
-    const { data, error: authError } = await signUp(
-      formData.email, 
-      formData.password,
-      { full_name: formData.fullName }
-    )
-    
-    if (authError) {
-      setError(authError.message)
+    try {
+      const { data, error: authError } = await signUp(
+        formData.email, 
+        formData.password,
+        { full_name: formData.fullName }
+      )
+      
+      if (authError) {
+        setError(authError.message)
+      } else {
+        // If Supabase returns a session, we redirect to onboarding immediately
+        // If session is null (email confirmation required), we show success state
+        if (data?.session) {
+          router.push('/onboarding')
+        } else {
+          setIsSuccess(true)
+        }
+      }
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.')
+    } finally {
       setLoading(false)
-    } else {
-      // Redirect to onboarding
-      router.push('/onboarding')
     }
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <div className="flex justify-center">
-            <Heart className="h-12 w-12 text-blue-600" />
-          </div>
-          <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
-            Create your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
-              Sign in here
-            </Link>
-          </p>
-        </div>
+  if (isSuccess) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary-100 rounded-full blur-[120px] -mr-48 -mt-48 opacity-50" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent-100 rounded-full blur-[120px] -ml-48 -mb-48 opacity-50" />
         
-        <div className="bg-white py-8 px-6 shadow-xl rounded-lg">
+        <GlassCard className="max-w-md w-full p-12 text-center space-y-8 relative z-10 border-transparent shadow-2xl">
+          <div className="flex justify-center">
+            <div className="h-20 w-20 bg-emerald-100 rounded-[2rem] flex items-center justify-center animate-bounce shadow-lg shadow-emerald-500/20">
+              <CheckCircle2 className="h-10 w-10 text-emerald-600" />
+            </div>
+          </div>
+          <div className="space-y-4">
+            <h2 className="text-3xl font-black text-gray-900 italic tracking-tight">Verify Your Account</h2>
+            <p className="text-gray-500 font-medium leading-relaxed">
+              We've sent a secure confirmation link to <span className="text-primary-600 font-extrabold">{formData.email}</span>. Please check your inbox and verify your email to continue.
+            </p>
+          </div>
+          <div className="pt-6">
+            <Link href="/login">
+              <Button variant="primary" className="w-full h-14 rounded-2xl font-black italic shadow-xl shadow-primary-500/20" rightIcon={ArrowRight}>
+                Proceed to Login
+              </Button>
+            </Link>
+          </div>
+        </GlassCard>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 relative overflow-hidden selection:bg-primary-100 selection:text-primary-900">
+      {/* Background Decor */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-primary-100 rounded-full blur-[120px] -mr-48 -mt-48 opacity-50" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent-100 rounded-full blur-[120px] -ml-48 -mb-48 opacity-50" />
+      
+      <div className="max-w-md w-full space-y-10 relative z-10">
+        <div className="space-y-4 text-center">
+          <Link href="/" className="inline-flex items-center space-x-3 group mb-2">
+            <div className="bg-primary-600 p-2.5 rounded-2xl shadow-lg shadow-primary-500/30 group-hover:scale-110 transition-transform duration-300">
+              <Heart className="h-6 w-6 text-white" />
+            </div>
+            <span className="text-2xl font-extrabold bg-gradient-to-r from-primary-700 to-accent-600 bg-clip-text text-transparent italic tracking-tight">
+              HealthCare+
+            </span>
+          </Link>
+          <h1 className="text-4xl font-black text-gray-900 tracking-tight italic">Join the Community</h1>
+          <p className="text-gray-500 font-medium">Create your secure medical profile and start tracking your wellness today.</p>
+        </div>
+
+        <GlassCard className="p-10 border-transparent shadow-2xl relative overflow-hidden">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
+              <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center italic">
+                <AlertCircle className="h-4 w-4 mr-2" />
                 {error}
               </div>
             )}
             
             <Input
-              label="Full Name"
+              label="FULL NAME"
               name="fullName"
               value={formData.fullName}
               onChange={handleChange}
               required
-              placeholder="Enter your full name"
+              placeholder="John Doe"
+              icon={User}
             />
             
             <Input
-              label="Email address"
+              label="EMAIL ADDRESS"
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
               required
-              placeholder="Enter your email"
+              placeholder="name@example.com"
+              icon={Mail}
             />
             
             <div className="relative">
               <Input
-                label="Password"
+                label="SECURE PASSWORD"
                 type={showPassword ? 'text' : 'password'}
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
                 required
-                placeholder="Create a password"
+                placeholder="••••••••"
+                icon={Lock}
               />
               <button
                 type="button"
-                className="absolute right-3 top-8 text-gray-400 hover:text-gray-600"
+                className="absolute right-4 top-[38px] text-gray-400 hover:text-primary-600 transition-colors"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -170,29 +185,48 @@ export default function RegisterPage() {
             </div>
             
             <Input
-              label="Confirm Password"
+              label="CONFIRM PASSWORD"
               type="password"
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleChange}
               required
-              placeholder="Confirm your password"
+              placeholder="••••••••"
+              icon={ShieldCheck}
             />
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading}
-            >
-              {loading ? 'Creating account...' : 'Create account'}
-            </Button>
+            <div className="pt-2">
+              <Button
+                type="submit"
+                className="w-full h-14 rounded-2xl font-black italic shadow-xl shadow-primary-500/20"
+                isLoading={loading}
+                rightIcon={loading ? null : Sparkles}
+              >
+                {loading ? 'Securing Profile...' : 'Begin My Journey'}
+              </Button>
+            </div>
           </form>
-        </div>
+        </GlassCard>
         
-        <div className="text-center">
-          <Link href="/" className="text-blue-600 hover:text-blue-500">
-            ← Back to home
+        <div className="flex flex-col items-center space-y-6">
+          <p className="text-sm font-bold text-gray-500">
+            Already a member?{' '}
+            <Link href="/login" className="text-primary-600 hover:text-primary-700 font-black italic ml-1">
+              Sign in to Dashboard
+            </Link>
+          </p>
+          <Link href="/" className="inline-flex items-center text-sm font-bold text-gray-400 hover:text-gray-600 transition-colors">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Home
           </Link>
+        </div>
+      </div>
+
+      {/* Security Badge */}
+      <div className="hidden lg:flex absolute bottom-10 left-10 items-center space-x-3 opacity-40">
+        <ShieldCheck className="h-8 w-8 text-slate-400" />
+        <div className="text-[10px] font-black uppercase tracking-[0.2em] italic text-slate-400">
+          AES-256 <br /> Data Protection
         </div>
       </div>
     </div>

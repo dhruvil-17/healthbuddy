@@ -1,27 +1,23 @@
-// app/api/medicine-logs/route.js
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-)
+import { createClient, getSessionUser } from '@/lib/supabase-server'
 
 // Get medicine logs for a user
 export async function GET(request) {
   try {
+    const user = await getSessionUser()
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('userId')
     const reminderId = searchParams.get('reminderId')
     const date = searchParams.get('date')
     const limit = parseInt(searchParams.get('limit')) || 50
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      )
-    }
+    const supabase = await createClient()
 
     let query = supabase
       .from('medicine_logs')
@@ -32,7 +28,7 @@ export async function GET(request) {
           dosage
         )
       `)
-      .eq('user_id', userId)
+      .eq('user_id', user.id) // Strict session filter
       .order('scheduled_time', { ascending: false })
       .limit(limit)
 
@@ -52,9 +48,7 @@ export async function GET(request) {
 
     const { data: logs, error } = await query
 
-    if (error) {
-      throw error
-    }
+    if (error) throw error
 
     return NextResponse.json({
       success: true,
@@ -73,8 +67,16 @@ export async function GET(request) {
 // Mark medicine as taken, missed, or skipped
 export async function POST(request) {
   try {
+    const user = await getSessionUser()
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const { 
-      userId, 
       reminderId, 
       scheduledTime, 
       status, 
@@ -82,7 +84,7 @@ export async function POST(request) {
       notes 
     } = await request.json()
 
-    if (!userId || !reminderId || !scheduledTime || !status) {
+    if (!reminderId || !scheduledTime || !status) {
       return NextResponse.json(
         { error: 'Required fields are missing' },
         { status: 400 }
@@ -96,23 +98,26 @@ export async function POST(request) {
       )
     }
 
+    const supabase = await createClient()
+
     const logData = {
-      user_id: userId,
+      user_id: user.id, // Derived from session
       reminder_id: reminderId,
       scheduled_time: scheduledTime,
       status: status,
-      notes: notes
+      notes: notes || null
     }
 
     if (status === 'taken') {
       logData.taken_time = takenTime || new Date().toISOString()
     }
 
-    // Check if log already exists for this scheduled time
+    // Check if log already exists for this scheduled time and user
     const { data: existingLog } = await supabase
       .from('medicine_logs')
       .select('id')
       .eq('reminder_id', reminderId)
+      .eq('user_id', user.id) // Ensure user owns this log
       .eq('scheduled_time', scheduledTime)
       .single()
 
@@ -123,6 +128,7 @@ export async function POST(request) {
         .from('medicine_logs')
         .update(logData)
         .eq('id', existingLog.id)
+        .eq('user_id', user.id)
         .select()
         .single()
       
@@ -147,7 +153,6 @@ export async function POST(request) {
 
   } catch (error) {
     console.error('Error updating medicine log:', error)
-    console.log(error.message)
     return NextResponse.json(
       { error: 'Failed to update medicine log' },
       { status: 500 }
@@ -158,30 +163,29 @@ export async function POST(request) {
 // Get today's medicine schedule
 export async function PUT(request) {
   try {
-    const { userId } = await request.json()
-
-    if (!userId) {
+    const user = await getSessionUser()
+    
+    if (!user) {
       return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
+        { error: 'Unauthorized' },
+        { status: 401 }
       )
     }
 
     const today = new Date()
     const todayStr = today.toISOString().split('T')[0]
+    const supabase = await createClient()
 
-    // Get active reminders
+    // Get active reminders for the current session user
     const { data: reminders, error: remindersError } = await supabase
       .from('medicine_reminders')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', user.id) // Session-based ID
       .eq('is_active', true)
       .lte('start_date', todayStr)
       .or(`end_date.is.null,end_date.gte.${todayStr}`)
 
-    if (remindersError) {
-      throw remindersError
-    }
+    if (remindersError) throw remindersError
 
     // Generate today's schedule
     const todaysSchedule = []
@@ -197,8 +201,9 @@ export async function PUT(request) {
           .from('medicine_logs')
           .select('*')
           .eq('reminder_id', reminder.id)
+          .eq('user_id', user.id)
           .eq('scheduled_time', scheduledDateTime.toISOString())
-          .single()
+          .maybeSingle()
 
         todaysSchedule.push({
           reminder: reminder,

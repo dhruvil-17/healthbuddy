@@ -1,283 +1,304 @@
-'use client'
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+"use client";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { 
-  Heart, 
   Stethoscope, 
-  Pill, 
   MapPin, 
+  Pill, 
   Users, 
-  Phone, 
-  Settings,
-  LogOut,
-  User,
-  Activity,
+  Activity, 
+  Heart, 
   Shield,
-  Sparkles,
-  ChevronRight
-} from 'lucide-react'
-import { getCurrentUser, signOut } from '../../../lib/auth'
-import { supabase } from '../../../lib/supabase'
-import Button from '../../../components/ui/Button'
-import { useProtectedProfile } from '@/hooks/useProtectedProfile'
-import Loader from '@/components/ui/Loader'
+  Sparkles, 
+  ChevronRight,
+  TrendingUp,
+  Clock,
+  AlertCircle,
+  FileText,
+  Calendar,
+  CheckCircle2
+} from "lucide-react";
+import { useProtectedProfile } from "@/hooks/useProtectedProfile";
+import Button from "@/components/ui/Button";
+import GlassCard from "@/components/ui/GlassCard";
+import Badge from "@/components/ui/Badge";
+import Avatar from "@/components/ui/Avatar";
+import Skeleton from "@/components/ui/Skeleton";
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const { user, profile, loading: profileLoading } = useProtectedProfile();
+  const [stats, setStats] = useState(null);
+  const [loadingStats, setLoadingStats] = useState(true);
 
-  const router = useRouter()
-   const { user, profile, loading  } = useProtectedProfile()
+  
 
+  useEffect(() => {
+    async function fetchDashboardData() {
+      try {
+        const response = await fetch('/api/dashboard/stats');
+        const data = await response.json();
+        if (data.success) {
+          setStats(data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching dashboard stats:", error);
+      } finally {
+        setLoadingStats(false);
+      }
+    }
+ 
+    if (user) {
+      
+      fetchDashboardData();
+    }
+  }, [user]);
 
-
-
-  const handleSignOut = async () => {
-    await signOut()
-    router.push('/')
-  }
-
-  if (loading) {
+  if (profileLoading || loadingStats) {
     return (
-    <Loader/>
-    )
+      <div className="space-y-8 animate-pulse">
+        <Skeleton className="h-40 w-full" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1,2,3,4].map(i => <Skeleton key={i} className="h-32 w-full" />)}
+        </div>
+      </div>
+    );
   }
 
   const quickActions = [
     {
-      title: 'AI Symptom Checker',
-      description: 'Get instant AI-powered health insights from your symptoms',
+      title: "Symptom Checker",
+      desc: "Analyze symptoms with AI",
       icon: Stethoscope,
-      href: '/symptom-checker',
-      gradient: 'from-blue-500 to-blue-600',
-      bgGradient: 'from-blue-50 to-blue-100'
+      href: "/symptom-checker",
+      color: "bg-blue-500",
+      accent: "bg-blue-50"
     },
     {
-      title: 'Find Healthcare Facilities',
-      description: 'Discover nearby hospitals, clinics, and specialists',
+      title: "Facility Finder",
+      desc: "Find nearby healthcare",
       icon: MapPin,
-      href: '/find-facility',
-      gradient: 'from-green-500 to-green-600',
-      bgGradient: 'from-green-50 to-green-100'
+      href: "/find-facility",
+      color: "bg-emerald-500",
+      accent: "bg-emerald-50"
     },
     {
-      title: 'Medicine Reminders',
-      description: 'Never miss a dose with smart medication tracking',
+      title: "Medicine Log",
+      desc: "Track your prescriptions",
       icon: Pill,
-      href: '/reminders',
-      gradient: 'from-purple-500 to-purple-600',
-      bgGradient: 'from-purple-50 to-purple-100'
+      href: "/reminders",
+      color: "bg-purple-500",
+      accent: "bg-purple-50"
     },
     {
-      title: 'Health Tips & Insights',
-      description: 'Personalized wellness recommendations just for you',
+      title: "Health Tips",
+      desc: "Daily wellness insights",
       icon: Users,
-      href: '/health-tips',
-      gradient: 'from-orange-500 to-orange-600',
-      bgGradient: 'from-orange-50 to-orange-100'
+      href: "/health-tips",
+      color: "bg-orange-500",
+      accent: "bg-orange-50"
+    }
+  ];
+
+  const dashboardStats = [
+    { 
+      label: "Health Reports", 
+      value: stats?.totalReports || "0", 
+      trend: stats?.totalReports > 0 ? "Active History" : "No Reports", 
+      icon: FileText, 
+      color: "text-blue-500" 
     },
-  ]
+    { 
+      label: "Med Adherence", 
+      value: `${stats?.adherenceRate || 0}%`, 
+      trend: stats?.adherenceRate > 80 ? "Excellent" : "Needs Attention", 
+      icon: Activity, 
+      color: "text-emerald-500" 
+    },
+    { 
+      label: "Daily Progress", 
+      value: `${stats?.medsTakenToday || 0}/${stats?.medsTotalToday || 0}`, 
+      trend: "Meds Today", 
+      icon: CheckCircle2, 
+      color: "text-purple-500" 
+    },
+    { 
+      label: "Active Reminders", 
+      value: stats?.activeReminders || "0", 
+      trend: "Scheduled", 
+      icon: Clock, 
+      color: "text-cyan-500" 
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-      {/* Enhanced Header */}
-    <header className="bg-white/80 backdrop-blur-lg shadow-lg border-b border-gray-200/50 sticky top-0 z-50">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 space-y-4 sm:space-y-0">
-      
-      {/* Left Side: Logo + Welcome */}
-      <div className="flex items-start sm:items-center space-x-4">
-        <div className="relative">
-          <Heart className="h-8 w-8 sm:h-10 sm:w-10 text-blue-600" />
-          <div className="absolute -top-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
-        </div>
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">HealthCare+</h1>
-          <p className="text-sm sm:text-base text-gray-600 font-medium">
-            Welcome back, {user?.user_metadata?.full_name || 'User'} 👋
+    <div className="space-y-10">
+      {/* Welcome Banner */}
+      <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary-600 to-accent-600 p-8 sm:p-12 text-white shadow-2xl shadow-primary-500/20 group">
+        <div className="relative z-10 space-y-4 max-w-2xl">
+          <Badge variant="glass" className="bg-white/20 border-white/30 text-white font-black italic tracking-[0.1em] text-[10px]">
+            <Sparkles className="h-3.5 w-3.5 mr-2" />
+            AI ENABLED WELLNESS CARE
+          </Badge>
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight italic">
+            Welcome back, <br className="sm:hidden" />
+            <span className="text-primary-100">{user?.user_metadata?.full_name?.split(" ")[0] || "User"}!</span>
+          </h1>
+          <p className="text-lg text-primary-50/80 font-medium leading-relaxed italic">
+            {stats?.activeReminders > 0 
+              ? `You have ${stats.activeReminders} active medical reminders scheduled.` 
+              : "No medication reminders scheduled for tonight. Have a restful evening!"}
           </p>
-        </div>
-      </div>
-
-      {/* Right Side: Buttons */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
-        <Button
-          variant="outline"
-          size="md"
-          onClick={() => router.push('/profile')}
-          className="flex items-center justify-center space-x-2 px-4 py-2.5 font-medium border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 w-full sm:w-auto"
-        >
-          <Settings className="h-5 w-5" />
-          <span>Settings</span>
-        </Button>
-
-        <Button
-          variant="outline"
-          size="md"
-          onClick={handleSignOut}
-          className="flex items-center justify-center space-x-2 px-4 py-2.5 font-medium text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 transition-all duration-200 w-full sm:w-auto"
-        >
-          <LogOut className="h-5 w-5" />
-          <span>Sign Out</span>
-        </Button>
-      </div>
-    </div>
-  </div>
-</header>
-
-
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-10">
-        {/* Enhanced Welcome Section */}
-        <div className="mb-12 text-center">
-          <div className="inline-flex items-center space-x-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-semibold mb-4">
-            <Sparkles className="h-4 w-4" />
-            <span>Your Personal Health Hub</span>
-          </div>
-          <h2 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight">
-            Your Health Dashboard
-          </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-            Access all your health tools, track your wellness journey, and get personalized insights in one beautiful place
-          </p>
-        </div>
-
-        {/* Enhanced Profile Summary Card */}
-    {profile && (
-  <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 p-6 sm:p-8 mb-12 hover:shadow-2xl transition-all duration-300">
-    <div className="flex flex-col md:flex-row md:items-start md:justify-between space-y-6 md:space-y-0">
-      {/* Left Side */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-6 space-y-4 sm:space-y-0">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-2xl shadow-lg self-start sm:self-auto">
-          <User className="h-8 w-8 text-white" />
-        </div>
-        <div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-3">Profile Overview</h3>
-          <div className="text-base text-gray-700 space-y-2 font-medium">
-            <p className="flex flex-wrap items-center gap-2">
-              <span className="font-semibold">Age:</span>
-              <span>{profile.age}</span>
-              <span className="hidden sm:inline mx-2">•</span>
-              <span className="font-semibold">Gender:</span>
-              <span>{profile.gender}</span>
-            </p>
-            <p className="flex flex-wrap items-center gap-2">
-              <span className="font-semibold">Language:</span>
-              <span>{profile.preferred_language}</span>
-            </p>
-            {profile.existing_conditions?.length > 0 && (
-              <p className="flex flex-col sm:flex-row sm:items-start gap-2">
-                <span className="font-semibold">Conditions:</span>
-                <span className="flex-1">{profile.existing_conditions.join(', ')}</span>
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Edit Button */}
-      <div className="flex justify-end">
-        <Button
-          variant="outline"
-          size="md"
-          onClick={() => router.push('/profile')}
-          className="px-6 py-3 font-semibold border-2 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200"
-        >
-          Edit Profile
-        </Button>
-      </div>
-    </div>
-  </div>
-)}
-
-
-        {/* Enhanced Quick Actions Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          {quickActions.map((action, index) => {
-            const IconComponent = action.icon
-            return (
-              <div
-                key={index}
-                onClick={() => router.push(action.href)}
-                className={`bg-gradient-to-br ${action.bgGradient} rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:scale-[1.02] hover:-translate-y-1`}
-              >
-                <div className="flex items-start justify-between mb-6">
-                  <div className={`bg-gradient-to-br ${action.gradient} p-4 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                    <IconComponent className="h-8 w-8 text-white" />
-                  </div>
-                  <ChevronRight className="h-6 w-6 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-1 transition-all duration-300" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">{action.title}</h3>
-                <p className="text-base text-gray-700 leading-relaxed">{action.description}</p>
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Enhanced Bottom Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Enhanced Health Tips Card */}
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 p-8 hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="bg-gradient-to-br from-green-500 to-green-600 p-3 rounded-xl">
-                <Activity className="h-6 w-6 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900">Daily Health Tips</h3>
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-start space-x-4 p-4 bg-green-50 rounded-xl border border-green-100">
-                <div className="bg-green-500 p-2 rounded-lg">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                </div>
-                <p className="text-base text-gray-800 font-medium">Drink at least 8 glasses of water daily for optimal hydration</p>
-              </div>
-              <div className="flex items-start space-x-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                <div className="bg-blue-500 p-2 rounded-lg">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                </div>
-                <p className="text-base text-gray-800 font-medium">Take a 30-minute walk daily to boost cardiovascular health</p>
-              </div>
-              <div className="flex items-start space-x-4 p-4 bg-orange-50 rounded-xl border border-orange-100">
-                <div className="bg-orange-500 p-2 rounded-lg">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                </div>
-                <p className="text-base text-gray-800 font-medium">Get 7-9 hours of quality sleep for better immunity</p>
-              </div>
-            </div>
-            <Button 
-              variant="outline" 
-              size="md" 
-              className="w-full mt-6 py-3 font-semibold text-base hover:bg-green-50 hover:border-green-300 transition-all duration-200"
-              onClick={() => router.push('/health-tips')}
-            >
-              Discover More Tips
+          <div className="pt-4 flex flex-wrap gap-4">
+            <Button variant="secondary" onClick={() => router.push("/symptom-checker")} className="h-12 px-8 rounded-xl font-black italic">
+              New Symptoms Analysis
+            </Button>
+            <Button variant="ghost" className="h-12 px-6 text-white hover:bg-white/10 font-bold" onClick={() => router.push("/health-tips")} rightIcon={ChevronRight}>
+              Daily Health Tips
             </Button>
           </div>
+        </div>
 
-          {/* Enhanced Emergency Information Card */}
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 p-8 hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="bg-gradient-to-br from-red-500 to-red-600 p-3 rounded-xl">
-                <Shield className="h-6 w-6 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900">Emergency Info</h3>
+        {/* Decorative elements */}
+        <div className="absolute right-[-10%] top-[-10%] w-[40%] aspect-square bg-white/10 rounded-full blur-3xl animate-pulse-slow" />
+        <div className="absolute left-[40%] bottom-[-20%] w-[30%] aspect-square bg-accent-400/20 rounded-full blur-3xl animate-glow" />
+        <Activity className="absolute right-12 bottom-12 h-32 w-32 text-white/5 opacity-30 rotate-12 group-hover:scale-110 transition-transform duration-700" />
+      </section>
+
+      {/* Dynamic Health Metrics */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {dashboardStats.map((stat, i) => (
+          <GlassCard key={i} className="p-6 flex items-center space-x-5 border-transparent bg-white/50 hover:bg-white shadow-xl shadow-slate-200/40">
+            <div className={`p-4 rounded-2xl bg-slate-50 ${stat.color} shadow-inner`}>
+              <stat.icon className="h-7 w-7" />
             </div>
-            {profile && (
-              <div className="space-y-6">
-                <div className="p-4 bg-red-50 rounded-xl border border-red-100">
-                  <p className="text-base font-bold text-gray-900 mb-2">Emergency Contact</p>
-                  <p className="text-lg font-semibold text-gray-800">{profile.emergency_contact_name}</p>
-                  <p className="text-lg font-bold text-red-600">{profile.emergency_contact_phone}</p>
-                </div>
-                {profile.location && (
-                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                    <p className="text-base font-bold text-gray-900 mb-2">Current Location</p>
-                    <p className="text-lg text-gray-800 font-medium">{profile.location}</p>
-                  </div>
-                )}
+            <div className="space-y-1">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] italic">{stat.label}</p>
+              <div className="flex items-end space-x-2">
+                <h3 className="text-2xl font-black text-gray-900 leading-none italic">{stat.value}</h3>
+                <span className={`text-[10px] font-black italic uppercase tracking-widest ${stat.trend.includes("Excellent") || stat.trend.includes("Active") ? "text-emerald-500" : "text-gray-400"}`}>
+                  {stat.trend}
+                </span>
               </div>
-            )}
-  
+            </div>
+          </GlassCard>
+        ))}
+      </section>
+
+      {/* Main Grid: Actions & History */}
+      <div className="grid lg:grid-cols-3 gap-10">
+        <div className="lg:col-span-2 space-y-10">
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-2xl font-extrabold text-gray-900 italic flex items-center">
+              <Sparkles className="h-6 w-6 mr-3 text-primary-600" />
+              Intelligence Dashboard
+            </h2>
           </div>
+          
+          <div className="grid sm:grid-cols-2 gap-8">
+            {quickActions.map((action, i) => (
+              <GlassCard 
+                key={i} 
+                className="group cursor-pointer p-8 relative overflow-hidden bg-slate-50/50 border-transparent hover:bg-white"
+                onClick={() => router.push(action.href)}
+              >
+                <div className={`h-16 w-16 ${action.color} rounded-2xl flex items-center justify-center p-4 mb-6 text-white shadow-xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6`}>
+                  <action.icon className="h-full w-full" />
+                </div>
+                <h3 className="text-2xl font-black text-gray-900 mb-2 truncate italic">{action.title}</h3>
+                <p className="text-sm font-bold text-gray-500 leading-relaxed">{action.desc}</p>
+                
+                <div className="absolute bottom-6 right-6 p-2 rounded-xl bg-gray-100/50 text-gray-400 group-hover:bg-primary-500 group-hover:text-white transition-all duration-300">
+                  <ChevronRight className="h-5 w-5" />
+                </div>
+              </GlassCard>
+            ))}
+          </div>
+
+          {/* Dynamic Spotlight: Latest Tip */}
+          <div className="pt-4">
+            <GlassCard className="p-0 overflow-hidden border-transparent shadow-2xl relative group">
+               <div className="bg-slate-900 p-10 text-white flex items-center justify-between relative z-10">
+                 <div className="space-y-4 max-w-lg">
+                   <Badge className="bg-primary-500/20 border-primary-500/30 text-primary-400 py-1.5 font-black italic tracking-widest text-[10px]">
+                      LATEST HEALTH INTELLIGENCE
+                   </Badge>
+                   <h3 className="text-2xl font-black italic">
+                      {stats?.latestTip?.category ? `${stats.latestTip.category.charAt(0).toUpperCase() + stats.latestTip.category.slice(1)} Insight` : "Daily Wellness Focus"}
+                   </h3>
+                   <p className="text-slate-400 font-bold leading-relaxed italic text-lg">
+                      {stats?.latestTip?.content || "Regular symptom checks and consistent medication adherence are the pillars of long-term wellness."}
+                   </p>
+                 </div>
+                 <div className="hidden sm:flex h-20 w-20 bg-white/5 rounded-full items-center justify-center animate-pulse">
+                    <Heart className="h-10 w-10 text-primary-500" />
+                 </div>
+               </div>
+               <div className="absolute top-0 right-0 h-full w-1/3 bg-gradient-to-l from-primary-600/10 to-transparent group-hover:from-primary-600/20 transition-all" />
+            </GlassCard>
+          </div>
+        </div>
+
+        {/* Dynamic Sidebar */}
+        <div className="space-y-10">
+          <div className="flex items-center space-x-3 px-2">
+             <AlertCircle className="h-6 w-6 text-red-500" />
+             <h2 className="text-2xl font-extrabold text-gray-900 italic">Critical Data</h2>
+          </div>
+          
+          <GlassCard className="bg-red-50/50 border-red-100 p-10 space-y-8 shadow-xl shadow-red-500/5">
+            <div className="flex items-center space-x-5">
+              <Avatar name={profile?.emergency_contact_name} size="lg" className="border-4 border-white shadow-lg" />
+              <div>
+                <h3 className="font-extrabold text-red-950 text-xl leading-none italic">{profile?.emergency_contact_name || "Emergency Contact"}</h3>
+                <p className="text-red-700/80 text-xs font-black uppercase tracking-widest mt-2">{profile?.emergency_contact_phone || "No Number Set"}</p>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              {[
+                { name: "Global Ambulance", num: "102", icon: Activity },
+                { name: "Police Dispatch", num: "100", icon: Shield },
+              ].map(num => (
+                <a 
+                  key={num.name} 
+                  href={`tel:${num.num}`}
+                  className="flex items-center justify-between p-5 bg-white rounded-2xl border border-red-100/50 hover:border-red-500 transition-all group shadow-sm"
+                >
+                  <div className="flex items-center space-x-4">
+                    <num.icon className="h-5 w-5 text-red-400 group-hover:text-red-600 transition-colors" />
+                    <span className="font-bold text-gray-900 italic">{num.name}</span>
+                  </div>
+                  <span className="font-black text-red-600 text-lg sm:text-xl group-hover:scale-110 transition-transform italic">{num.num}</span>
+                </a>
+              ))}
+            </div>
+            <Button variant="danger" className="w-full h-16 rounded-[1.5rem] font-black italic shadow-2xl shadow-red-500/20" leftIcon={AlertCircle}>
+              GENERATE SOS SIGNAL
+            </Button>
+          </GlassCard>
+
+          <GlassCard className="p-8 border-transparent bg-slate-50/50 relative overflow-hidden group">
+            <div className="relative z-10">
+               <h3 className="font-black text-gray-900 text-lg mb-6 flex items-center italic">
+                 <Shield className="h-5 w-5 mr-3 text-primary-500" />
+                 SECURITY STATUS
+               </h3>
+               <div className="flex items-center space-x-3 mb-6">
+                 <div className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+                 <span className="text-xs font-black text-emerald-600 uppercase tracking-widest italic">All Data Encrypted</span>
+               </div>
+               <p className="text-sm font-bold text-gray-500 leading-relaxed mb-8">
+                 Your medical profile is protected by enterprise-grade AES-256 encryption.
+               </p>
+               <Button variant="ghost" className="w-full border-gray-200 text-gray-600 font-extrabold text-xs uppercase tracking-widest hover:bg-white rounded-xl h-12">
+                 Audit Privacy Log
+               </Button>
+            </div>
+            <Shield className="absolute right-[-10%] bottom-[-10%] h-32 w-32 text-slate-200/50 rotate-12 transition-transform duration-700 group-hover:scale-110" />
+          </GlassCard>
         </div>
       </div>
     </div>
-  )
+  );
 }

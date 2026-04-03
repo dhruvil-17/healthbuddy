@@ -1,44 +1,48 @@
-'use client'
-
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { getCurrentUser } from '@/lib/auth'
-import { supabase } from '@/lib/supabase'
+import { useProtectedUser } from './useProtectedUser'
+import { getUserProfile } from '@/utils/profileService'
 
 export function useProtectedProfile() {
   const router = useRouter()
-  const [user, setUser] = useState(null)
+  const { user, loading: userLoading } = useProtectedUser()
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const checkUserAndProfile = async () => {
-      const currentUser = await getCurrentUser()
 
-      if (!currentUser) {
+    const fetchProfile = async () => {
+      if (userLoading) return
+      
+      if (!user) {
         router.push('/login')
         return
       }
 
-      setUser(currentUser)
-
-      const { data: profileData } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', currentUser.id)
-        .single()
-
-      if (!profileData) {
-        router.push('/onboarding')
-        return
+      try {
+        const profileData = await getUserProfile()
+        if (!profileData && !window.location.pathname.includes('/onboarding')) {
+          router.push('/onboarding')
+          return
+        }
+        
+        // Augment profile with auth metadata (e.g. full_name)
+        const augmentedProfile = {
+          ...profileData,
+          full_name: user?.user_metadata?.full_name || 'User'
+        }
+        
+        setProfile(augmentedProfile)
+      } catch (error) {
+        console.error('Error fetching profile in hook:', error)
+      } finally {
+        setLoading(false)
       }
-
-      setProfile(profileData)
-      setLoading(false)
     }
 
-    checkUserAndProfile()
-  }, [router])
+    fetchProfile()
+  }, [user, userLoading, router])
+
 
   return { user, profile, loading, setProfile }
 }

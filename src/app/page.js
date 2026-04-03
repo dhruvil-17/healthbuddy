@@ -1,37 +1,24 @@
 "use client";
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { 
+  Heart, 
+  Shield, 
+  Users, 
+  Stethoscope, 
+  Pill, 
+  MapPin, 
+  Star, 
+  CheckCircle, 
+  ArrowRight,
+  Sparkles,
+  ShieldCheck,
+  Activity
+} from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
-import { Heart, Shield, Users, Stethoscope, Pill, MapPin, Star, CheckCircle, ArrowRight } from "lucide-react";
-import { useEffect, useState } from "react";
-
-// Mock Button component since we can't import the actual one
-const Button = ({ children, variant = "primary", size = "md", className = "", ...props }) => {
-  const baseClasses = "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2";
-  
-  const variants = {
-    primary: "bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl",
-    outline: "border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white",
-    secondary: "bg-white text-blue-600 hover:bg-gray-100 shadow-lg hover:shadow-xl"
-  };
-  
-  const sizes = {
-    md: "px-6 py-3 text-base",
-    lg: "px-8 py-4 text-lg"
-  };
-  
-  return (
-    <button 
-      className={`${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-};
-
-// Mock Link component
-const Link = ({ href, children, className = "" }) => (
-  <a href={href} className={className}>{children}</a>
-);
+import Button from "@/components/ui/Button";
+import GlassCard from "@/components/ui/GlassCard";
+import Badge from "@/components/ui/Badge";
 
 export default function LandingPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -39,261 +26,228 @@ export default function LandingPage() {
 
   useEffect(() => {
     setIsVisible(true);
-    // Mock authentication check
-    const getUser = async () => {
-      const currentUser = await getCurrentUser();
-      setIsAuthenticated(!currentUser.is_anonymous);
+    const checkAuth = async () => {
+      const user = await getCurrentUser();
+      setIsAuthenticated(!!user && !user.is_anonymous);
     };
-    getUser();
+    checkAuth();
   }, []);
 
   const features = [
     {
       icon: Stethoscope,
       title: "AI Symptom Checker",
-      description: "Describe your symptoms and get AI-powered insights about possible conditions and next steps",
+      description: "Get instant AI-powered insights for your symptoms with personalized guidance.",
       color: "from-blue-500 to-cyan-500"
     },
     {
       icon: MapPin,
       title: "Facility Finder",
-      description: "Locate nearby hospitals, clinics, and pharmacies with contact details and directions",
-      color: "from-green-500 to-emerald-500"
+      description: "Locate professional healthcare facilities near your immediate location.",
+      color: "from-emerald-500 to-teal-500"
     },
     {
       icon: Pill,
       title: "Medicine Reminders",
-      description: "Never miss a dose with customizable medication reminders and tracking",
-      color: "from-purple-500 to-violet-500"
-    },
-    {
-      icon: Users,
-      title: "Health Tips",
-      description: "Personalized health advice based on your profile and medical conditions",
-      color: "from-orange-500 to-red-500"
-    },
-    {
-      icon: Shield,
-      title: "Emergency Contacts",
-      description: "Quick access to emergency contacts and SOS features for urgent situations",
-      color: "from-red-500 to-pink-500"
-    },
-    {
-      icon: Heart,
-      title: "Community Focus",
-      description: "Designed specifically for underserved communities with accessible, user-friendly interface",
-      color: "from-pink-500 to-rose-500"
+      description: "Smart tracking and timely alerts for your medication schedules.",
+      color: "from-violet-500 to-purple-500"
     }
   ];
 
-  const stats = [
-    { number: "10K+", label: "Active Users" },
-    { number: "50K+", label: "Health Checks" },
-    { number: "99%", label: "Satisfaction Rate" },
-    { number: "24/7", label: "Support Available" }
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100 relative overflow-hidden">
-      {/* Animated background elements */}
+    <div className="min-h-screen bg-slate-50 overflow-hidden selection:bg-primary-100 selection:text-primary-900">
+      {/* Background Orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-4 -right-4 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse"></div>
-        <div className="absolute -bottom-8 -left-4 w-72 h-72 bg-indigo-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-100 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse" style={{ animationDelay: '4s' }}></div>
+        <div className="absolute -top-[10%] -right-[10%] w-[50%] h-[50%] bg-primary-200/20 rounded-full blur-[120px] animate-pulse-slow" />
+        <div className="absolute top-[20%] -left-[10%] w-[40%] h-[40%] bg-accent-200/20 rounded-full blur-[100px] animate-glow" />
+        <div className="absolute -bottom-[10%] left-[20%] w-[60%] h-[60%] bg-emerald-200/10 rounded-full blur-[140px] animate-pulse-slow" style={{ animationDelay: '2s' }} />
       </div>
 
       {/* Header */}
-<header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-blue-100 sticky top-0 z-50">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div className="flex flex-col sm:flex-row justify-between items-center py-4 sm:py-6 space-y-4 sm:space-y-0">
-      {/* Logo and Title */}
-      <div className="flex items-center space-x-3 group">
-        <div className="relative">
-          <Heart className="h-8 w-8 sm:h-10 sm:w-10 text-blue-600 transform group-hover:scale-110 transition-transform duration-200" />
-          <div className="absolute -inset-1 bg-blue-600 rounded-full opacity-20 animate-ping"></div>
+      <header className="fixed top-0 w-full z-50 glass-nav h-20 px-6 sm:px-12 flex items-center justify-between">
+        <div className="flex items-center space-x-3 group cursor-pointer">
+          <div className="bg-primary-600 p-2.5 rounded-2xl shadow-lg shadow-primary-500/30 group-hover:scale-110 transition-transform duration-300">
+            <Heart className="h-6 w-6 text-white" />
+          </div>
+          <span className="text-2xl font-extrabold bg-gradient-to-r from-primary-700 to-accent-600 bg-clip-text text-transparent italic">
+            HealthCare+
+          </span>
         </div>
-        <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-          HealthCare+
-        </span>
-      </div>
 
-      {/* Navigation Buttons */}
-      {isAuthenticated ? (
-        <Link href="/dashboard">
-          <Button className="flex items-center space-x-2 w-full sm:w-auto justify-center">
-            <span>Dashboard</span>
-            <ArrowRight className="w-4 h-4" />
-          </Button>
-        </Link>
-      ) : (
-        <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0 w-full sm:w-auto">
-          <Link href="/login">
-            <Button variant="outline" className="w-full sm:w-auto">Login</Button>
-          </Link>
-          <Link href="/register">
-            <Button className="w-full sm:w-auto">Sign Up</Button>
-          </Link>
+        <nav className="hidden md:flex items-center space-x-8 text-sm font-bold text-gray-600">
+          <Link href="#features" className="hover:text-primary-600 transition-colors">Features</Link>
+          <Link href="#how-it-works" className="hover:text-primary-600 transition-colors">Process</Link>
+          <Link href="#about" className="hover:text-primary-600 transition-colors">Community</Link>
+        </nav>
+
+        <div className="flex items-center space-x-4">
+          {isAuthenticated ? (
+            <Link href="/dashboard">
+              <Button rightIcon={ArrowRight}>Go to Dashboard</Button>
+            </Link>
+          ) : (
+            <>
+              <Link href="/login" className="hidden sm:block">
+                <Button variant="ghost">Login</Button>
+              </Link>
+              <Link href="/register">
+                <Button>Get Started</Button>
+              </Link>
+            </>
+          )}
         </div>
-      )}
-    </div>
-  </div>
-</header>
-
+      </header>
 
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
-        <div className={`text-center transform transition-all duration-1000 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-          <div className="mb-8">
-            <div className="inline-flex items-center space-x-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium mb-6 animate-bounce">
-              <Star className="w-4 h-4" />
-              <span>Trusted by 10,000+ users</span>
-            </div>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
-              Your AI-Powered
-              <span className="block bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent animate-pulse">
+      <main className="relative pt-32 pb-20 px-6 sm:px-12 max-w-7xl mx-auto">
+        <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className={`space-y-8 transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+            <Badge variant="primary" className="py-2 px-4">
+              <Sparkles className="h-4 w-4 mr-2 text-primary-500 animate-pulse" />
+              Revolutionizing Community Healthcare
+            </Badge>
+            
+            <h1 className="text-5xl sm:text-7xl font-extrabold text-gray-900 leading-[1.1] tracking-tight">
+              Your AI Powered <br />
+              <span className="bg-gradient-to-r from-primary-600 via-accent-500 to-emerald-500 bg-clip-text text-transparent">
                 Health Companion
               </span>
             </h1>
-          </div>
-          
-          <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed">
-            Empowering underserved communities with accessible healthcare
-            information, symptom checking, and local facility finder - all
-            <span className="font-semibold text-blue-600"> powered by AI</span>
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-6 justify-center ">
-            <Link href={isAuthenticated ? '/dashboard' : '/register'}>
-              <Button size="lg" className="w-full sm:w-auto flex items-center space-x-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-                <span>Get Started Free</span>
-                <ArrowRight className="w-5 h-5" />
-              </Button>
-            </Link>
-            <Link href="#features">
-              <Button variant="outline" size="lg" className="w-full sm:w-auto border-2 border-blue-600 hover:shadow-lg">
-                Learn More
-              </Button>
-            </Link>
+
+            <p className="text-xl text-gray-600 leading-relaxed max-w-xl">
+              Empowering communities with professional healthcare insights, 
+              facility location, and smart medication tracking—all accessible in one premium platform.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <Link href={isAuthenticated ? "/dashboard" : "/register"}>
+                <Button size="lg" className="w-full sm:w-auto h-14 text-lg px-10" rightIcon={ArrowRight}>
+                  Start Monitoring Free
+                </Button>
+              </Link>
+              <Link href="#features">
+                <Button size="lg" variant="secondary" className="w-full sm:w-auto h-14 text-lg px-10">
+                  Explore Tools
+                </Button>
+              </Link>
+            </div>
+
+            <div className="flex items-center space-x-6 pt-6">
+              <div className="flex -space-x-3">
+                {[1,2,3,4].map(i => (
+                  <div key={i} className="w-12 h-12 rounded-2xl border-4 border-white bg-gray-100 overflow-hidden shadow-sm">
+                    <img src={`https://i.pravatar.cc/150?u=${i}`} alt="user" className="w-full h-full object-cover" />
+                  </div>
+                ))}
+              </div>
+              <div>
+                <p className="text-sm font-extrabold text-gray-900">10k+ Active Users</p>
+                <div className="flex text-amber-500">
+                  {[1,2,3,4,5].map(i => <Star key={i} className="h-4 w-4 fill-current" />)}
+                </div>
+              </div>
+            </div>
           </div>
 
-      
+          <div className={`relative transition-all duration-1000 delay-500 ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+            <div className="relative z-10 rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white/50 backdrop-blur-sm">
+              <img 
+                src="/images/hero_bg.png" 
+                alt="Healthcare AI" 
+                className="w-full aspect-square object-cover"
+              />
+            </div>
+            
+            {/* Floating UI Elements */}
+            <GlassCard className="absolute -top-10 -right-10 w-48 animate-float hidden md:block" hover={false}>
+              <div className="flex items-center space-x-3 mb-2">
+                <div className="p-2 bg-emerald-100 rounded-xl text-emerald-600">
+                  <ShieldCheck className="h-6 w-6" />
+                </div>
+                <span className="font-bold text-sm">Verified</span>
+              </div>
+              <p className="text-xs text-gray-500 font-medium">Medical data encrypted and secured.</p>
+            </GlassCard>
+
+            <GlassCard className="absolute -bottom-10 -left-10 w-56 animate-float hidden md:block" hover={false} style={{ animationDelay: '1s' }}>
+              <div className="flex items-center space-x-3 mb-2">
+                <div className="p-2 bg-primary-100 rounded-xl text-primary-600">
+                  <Activity className="h-6 w-6" />
+                </div>
+                <span className="font-bold text-sm">Real-time</span>
+              </div>
+              <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full w-[70%] bg-primary-500 rounded-full animate-pulse" />
+              </div>
+              <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest">System Health: 99.9%</p>
+            </GlassCard>
+          </div>
         </div>
-      </section>
+      </main>
 
       {/* Features Section */}
-      <section id="features" className="bg-white/50 backdrop-blur-sm py-12 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center ">
-            <div className="inline-flex items-center space-x-4 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium mb-6">
-              <CheckCircle className="w-4 h-4 " />
-              <span>Comprehensive Healthcare Tools</span>
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              Everything You Need for
-              <span className="block bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mt-2">
-                Better Health
-              </span>
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8 ">
-              Comprehensive healthcare tools designed specifically for your community&apos;s needs
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => {
-              const IconComponent = feature.icon;
-              return (
-                <div 
-                  key={index}
-                  className="group relative bg-white rounded-2xl p-8 border border-gray-100 hover:border-blue-200 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2"
-                >
-                  {/* Gradient background */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-5 rounded-2xl transition-opacity duration-300`}></div>
-                  
-                  {/* Icon with gradient background */}
-                  <div className={`relative w-16 h-16 bg-gradient-to-br ${feature.color} rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-200`}>
-                    <IconComponent className="h-8 w-8 text-white" />
-                  </div>
-                  
-                  <h3 className="text-xl font-bold text-gray-900 mb-4 text-center group-hover:text-blue-600 transition-colors duration-200">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-600 text-center leading-relaxed">
-                    {feature.description}
-                  </p>
-                  
-                  {/* Hover effect border */}
-                  <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-blue-200 transition-colors duration-300"></div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="relative bg-gradient-to-r from-blue-300 via-blue-400 to-indigo-400 py-24 overflow-hidden">
-        {/* Background pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }}></div>
-        </div>
-        
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8 relative">
-          <div className="mb-8">
-            <Heart className="w-16 h-16 text-blue-200 mx-auto mb-6 animate-pulse" />
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Ready to Take Control of
-              <span className="block text-blue-200">Your Health?</span>
-            </h2>
-          </div>
-          
-          <p className="text-xl md:text-2xl text-blue-100 mb-12 leading-relaxed">
-            Join thousands of users who are already using our platform to stay
-            healthy and connected with their community
+      <section id="features" className="py-32 px-6 sm:px-12 bg-white relative">
+        <div className="max-w-7xl mx-auto text-center mb-20 space-y-4">
+          <Badge variant="info">Our Core Capabilities</Badge>
+          <h2 className="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight">
+            Designed for <span className="text-primary-600">Your Wellness</span>
+          </h2>
+          <p className="text-xl text-gray-500 max-w-2xl mx-auto font-medium">
+            Powerful features built to provide professional healthcare assistance to everyone, everywhere.
           </p>
-          
-          <Link href={isAuthenticated ? '/dashboard' : '/register'}>
-            <Button
-              size="lg"
-              variant="secondary"
-              className="bg-white text-blue-600 hover:bg-blue-50 shadow-2xl hover:shadow-3xl transform hover:scale-105 flex items-center space-x-3 mx-auto"
-            >
-              <span>Start Your Health Journey</span>
-              <ArrowRight className="w-5 h-5" />
-            </Button>
-          </Link>
-          
-          <div className="mt-8 text-blue-200 text-sm">
-            ✓ Free to get started  ✓ No credit card required  ✓ 24/7 support
-          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+          {features.map((f, i) => (
+            <GlassCard key={i} className="group cursor-pointer p-10 bg-slate-50/50 hover:bg-white border-transparent hover:border-primary-100">
+              <div className={`w-16 h-16 bg-gradient-to-br ${f.color} rounded-[2rem] flex items-center justify-center mb-8 shadow-lg shadow-primary-500/20 group-hover:scale-110 transition-transform duration-500`}>
+                <f.icon className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-primary-600 transition-colors">{f.title}</h3>
+              <p className="text-gray-600 leading-relaxed font-medium">{f.description}</p>
+              <div className="mt-8 flex items-center text-primary-600 font-bold group-hover:translate-x-2 transition-transform">
+                Learn more <ArrowRight className="h-5 w-5 ml-2" />
+              </div>
+            </GlassCard>
+          ))}
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-3 mb-8 group">
-              <div className="relative">
-                <Heart className="h-8 w-8 text-blue-400 group-hover:text-blue-300 transition-colors duration-200" />
-                <div className="absolute -inset-1 bg-blue-400 rounded-full opacity-20 animate-ping"></div>
+      <footer className="bg-slate-900 text-white py-20 px-6 sm:px-12">
+        <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-12">
+          <div className="col-span-2 space-y-6">
+            <div className="flex items-center space-x-3">
+              <div className="bg-primary-600 p-2 rounded-xl">
+                <Heart className="h-6 w-6" />
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                HealthCare+
-              </span>
+              <span className="text-2xl font-bold italic tracking-tight">HealthCare+</span>
             </div>
-            
-            <div className="border-t border-gray-700 pt-8">
-              <p className="text-gray-400 text-lg">
-                © 2024 HealthCare+. Making healthcare accessible for everyone.
-              </p>
-              <p className="text-gray-500 text-sm mt-2">
-                Empowering communities • Building healthier futures • One person at a time
-              </p>
-            </div>
+            <p className="text-slate-400 max-w-sm leading-relaxed">
+              Making professional healthcare accessible and affordable for underserved communities worldwide through the power of AI.
+            </p>
           </div>
+          <div>
+            <h4 className="font-bold text-lg mb-6">Platform</h4>
+            <ul className="space-y-4 text-slate-400 font-medium">
+              <li><Link href="#" className="hover:text-white transition-colors">Symptom Checker</Link></li>
+              <li><Link href="#" className="hover:text-white transition-colors">Facility Finder</Link></li>
+              <li><Link href="#" className="hover:text-white transition-colors">Medication Tracker</Link></li>
+              <li><Link href="#" className="hover:text-white transition-colors">Health Tips</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold text-lg mb-6">Company</h4>
+            <ul className="space-y-4 text-slate-400 font-medium">
+              <li><Link href="#" className="hover:text-white transition-colors">About Us</Link></li>
+              <li><Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+              <li><Link href="#" className="hover:text-white transition-colors">Terms of Service</Link></li>
+              <li><Link href="#" className="hover:text-white transition-colors">Contact Support</Link></li>
+            </ul>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-slate-800 text-center text-slate-500 text-sm font-bold">
+          © 2024 HealthCare+ AI Technologies. All rights reserved.
         </div>
       </footer>
     </div>

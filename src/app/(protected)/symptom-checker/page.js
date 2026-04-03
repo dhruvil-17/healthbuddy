@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Stethoscope,
@@ -9,364 +9,274 @@ import {
   ArrowLeft,
   Heart,
   Loader2,
-
   AlertCircle,
   Info,
+  Send,
+  History,
+  TrendingUp,
+  Sparkles,
+  Activity,
+  ChevronRight
 } from "lucide-react";
-
-import Loader from "@/components/ui/Loader";
-import { useProtectedUser } from "@/hooks/useProtectedUser";
+import Button from "@/components/ui/Button";
+import GlassCard from "@/components/ui/GlassCard";
+import Badge from "@/components/ui/Badge";
+import Input from "@/components/ui/Input";
+import Skeleton from "@/components/ui/Skeleton";
+import { useProtectedProfile } from "@/hooks/useProtectedProfile";
 
 export default function SymptomCheckerPage() {
-
-  const [symptoms, setSymptoms] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-   const { user, loading:autLoading } = useProtectedUser()
   const router = useRouter();
+  const { user, profile, loading: profileLoading } = useProtectedProfile();
+  const [symptoms, setSymptoms] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [result, setResult] = useState(null);
+  const [history, setHistory] = useState([]);
 
-if(autLoading){
-  return <Loader/>
-}
+  useEffect(() => {
+    if (user) {
+      fetchHistory();
+    }
+  }, [user]);
 
-
+  const fetchHistory = async () => {
+    try {
+      const response = await fetch(`/api/symptom-checker?userId=${user.id}&limit=5`);
+      const data = await response.json();
+      if (data.success) {
+        setHistory(data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching history:", error);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!symptoms.trim() || !user) return;
 
-    setLoading(true);
+    setIsAnalyzing(true);
     setResult(null);
 
     try {
       const response = await fetch("/api/symptom-checker", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          symptoms: symptoms.trim(),
-          userId: user.id,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ symptoms: symptoms.trim() }),
       });
 
       const data = await response.json();
 
-      if (data.success) {
+      if (response.ok) {
         setResult(data.data);
-       
+        fetchHistory(); // Refresh history
       } else {
         alert(data.error || "Failed to analyze symptoms");
       }
     } catch (error) {
       console.error("Error:", error);
-      alert("Failed to analyze symptoms. Please try again.");
+      alert("Analysis failed. Please try again.");
     } finally {
-      setLoading(false);
+      setIsAnalyzing(false);
     }
   };
 
-  //   const handleSubmit = async (e) => {
-  //     e.preventDefault()
-  //     await analyzeSymptoms(symptoms, user.id)
-  //   }
-
-  const getSeverityColor = (severity) => {
-    switch (severity) {
-      case "low":
-        return "text-green-600 bg-green-50 border-green-200";
-      case "medium":
-        return "text-yellow-600 bg-yellow-50 border-yellow-200";
-      case "high":
-        return "text-orange-600 bg-orange-50 border-orange-200";
-      case "emergency":
-        return "text-red-600 bg-red-50 border-red-200";
-      default:
-        return "text-gray-600 bg-gray-50 border-gray-200";
+  const getSeverityVariant = (severity) => {
+    switch (severity?.toLowerCase()) {
+      case "low": return "success";
+      case "medium": return "warning";
+      case "high": return "danger";
+      case "emergency": return "danger";
+      default: return "neutral";
     }
   };
 
-  const getSeverityIcon = (severity) => {
-    switch (severity) {
-      case "low":
-        return <CheckCircle className="h-5 w-5" />;
-      case "medium":
-        return <Info className="h-5 w-5" />;
-      case "high":
-        return <AlertTriangle className="h-5 w-5" />;
-      case "emergency":
-        return <AlertCircle className="h-5 w-5" />;
-      default:
-        return <Info className="h-5 w-5" />;
-    }
-  };
-
-  if (!user) {
+  if (profileLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <Heart className="h-12 w-12 text-blue-600 mx-auto animate-pulse mb-4" />
-          <p className="text-gray-600">Loading...</p>
+      <div className="space-y-8 animate-pulse pt-4">
+        <Skeleton className="h-40 w-full rounded-[2.5rem]" />
+        <div className="grid lg:grid-cols-3 gap-10">
+          <div className="lg:col-span-2 space-y-6">
+            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-96 w-full" />
+          </div>
+          <Skeleton className="h-screen w-full" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-green-100">
-      {/* Header */}
-<header className="bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-300 sticky top-0 z-50">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div className="py-4 sm:py-6 flex flex-col gap-4 sm:gap-6">
-
-      {/* Back Button */}
-      <button
-        onClick={() => router.push("/dashboard")}
-        className="flex items-center gap-2 text-gray-700 hover:text-gray-900 font-medium w-fit"
-      >
-        <ArrowLeft className="h-5 w-5 sm:h-6 sm:w-6" />
-        <span className="text-sm sm:text-base">Back to Dashboard</span>
-      </button>
-
-      {/* Title Block */}
-      <div className="flex items-start sm:items-center gap-4 sm:gap-5">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-700 p-3 sm:p-4 rounded-2xl shadow-lg">
-          <Stethoscope className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
-        </div>
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-            AI Symptom Checker
+    <div className="space-y-10 pb-20">
+      {/* Header Banner */}
+      <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary-600 to-indigo-700 p-8 sm:p-12 text-white shadow-2xl shadow-primary-500/20">
+        <div className="relative z-10 space-y-4 max-w-2xl">
+          <Badge variant="glass" className="bg-white/20 border-white/30 text-white">
+            <Sparkles className="h-3.5 w-3.5 mr-2" />
+            Medical Grade AI Analysis
+          </Badge>
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight italic">
+            AI Symptom <br className="sm:hidden" />
+            <span className="text-primary-100">Checker</span>
           </h1>
-          <p className="text-sm sm:text-base text-gray-700 font-medium">
-            Get AI-powered health insights instantly
+          <p className="text-lg text-primary-50/80 font-medium leading-relaxed">
+            Describe your concerns and get instant medical-grade insights powered by Gemini 2.0.
           </p>
         </div>
-      </div>
+        <Stethoscope className="absolute right-12 bottom-12 h-32 w-32 text-white/5 opacity-50 rotate-12" />
+      </section>
 
-    </div>
-  </div>
-</header>
+      {/* Disclaimer */}
+      <GlassCard className="bg-amber-50 border-amber-100 p-6 flex items-start space-x-4 border-l-8 border-l-amber-400" hover={false}>
+        <div className="p-3 bg-amber-400 rounded-xl text-white">
+          <AlertTriangle className="h-6 w-6" />
+        </div>
+        <div>
+          <h3 className="text-lg font-bold text-amber-900 leading-none mb-1">Medical Disclaimer</h3>
+          <p className="text-amber-800/80 text-sm font-bold">
+            This tool provides information only and is NOT a substitute for professional medical advice, diagnosis, or treatment. 
+            <span className="text-amber-900 ml-1">In case of emergency, call 102 immediately.</span>
+          </p>
+        </div>
+      </GlassCard>
 
+      <div className="grid lg:grid-cols-3 gap-10">
+        <div className="lg:col-span-2 space-y-10">
+          {/* Form */}
+          <GlassCard className="p-10 border-transparent shadow-xl ring-1 ring-gray-100">
+            <h2 className="text-2xl font-extrabold text-gray-900 mb-8 flex items-center">
+              <Activity className="h-6 w-6 mr-3 text-primary-600" />
+              Describe Symptoms
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-8">
+              <div className="space-y-4">
+                <label className="text-sm font-extrabold text-gray-500 uppercase tracking-widest pl-1">
+                  DETAILED DESCRIPTION
+                </label>
+                <textarea
+                  value={symptoms}
+                  onChange={(e) => setSymptoms(e.target.value)}
+                  placeholder="e.g. 'I've had a sharp pain in my upper abdomen for 2 days, and it gets worse after eating...'"
+                  className="w-full min-h-[180px] p-6 rounded-3xl bg-gray-50/50 border-2 border-gray-100 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/5 focus:bg-white transition-all duration-300 text-lg font-medium outline-none resize-none placeholder:text-gray-400"
+                  required
+                />
+              </div>
+              <Button 
+                type="submit" 
+                size="lg" 
+                className="w-full h-16 rounded-[1.5rem] text-lg font-extrabold"
+                isLoading={isAnalyzing}
+                leftIcon={isAnalyzing ? null : Send}
+              >
+                {isAnalyzing ? "Processing Analysis..." : "Analyze Symptoms Now"}
+              </Button>
+            </form>
+          </GlassCard>
 
+          {/* Analysis Results Display */}
+          {result && (
+            <GlassCard className="p-10 border-transparent shadow-2xl animate-in fade-in slide-in-from-top-8 duration-700">
+               <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-10 gap-4">
+                  <h3 className="text-2xl font-extrabold text-gray-900">Analysis Insights</h3>
+                  <Badge variant={getSeverityVariant(result.severity)} className="py-2 px-5 text-sm uppercase tracking-wider font-extrabold">
+                     {result.severity} Priority
+                  </Badge>
+               </div>
 
-      <div className="max-w-7xl mx-auto px-8 py-12">
-        {/* Disclaimer */}
-        <div className="bg-gradient-to-r from-yellow-50 to-orange-100 border-l-8 border-yellow-500 rounded-2xl shadow-xl p-6 mb-10">
-          <div className="flex items-start gap-4">
-            <div className="bg-yellow-500 p-3 rounded-xl">
-              <AlertTriangle className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <p className="text-xl font-bold text-yellow-900 mb-2">
-                Important Medical Disclaimer
-              </p>
-              <p className="text-base text-yellow-800 leading-relaxed">
-                This AI tool provides general health information only and should
-                not replace professional medical advice. Always consult with a
-                healthcare provider for proper diagnosis and treatment.
-              </p>
-            </div>
-          </div>
+               <div className="space-y-12">
+                  {/* Possible Conditions */}
+                  <div className="grid md:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-extrabold text-gray-400 uppercase tracking-widest">POSSIBLE CONDITIONS</h4>
+                      <div className="space-y-3">
+                        {result.possibleConditions?.map((c, i) => (
+                          <div key={i} className="flex items-start space-x-3 p-4 bg-gray-50/80 rounded-2xl border border-gray-100 group hover:bg-white hover:border-primary-200 transition-colors">
+                            <Info className="h-5 w-5 text-primary-500 shrink-0 mt-0.5" />
+                            <span className="font-bold text-gray-800 leading-tight group-hover:text-primary-700">{c}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-extrabold text-gray-400 uppercase tracking-widest">IMMEDIATE ACTIONS</h4>
+                      <div className="space-y-3">
+                        {result.recommendations?.immediate?.map((a, i) => (
+                          <div key={i} className="flex items-start space-x-3 p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100 uppercase text-[10px] sm:text-xs font-extrabold tracking-tight">
+                            <CheckCircle className="h-5 w-5 text-emerald-600 shrink-0" />
+                            <span className="text-emerald-800 mt-1">{a}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <hr className="border-gray-100" />
+
+                  {/* Warning Signs */}
+                  <div className="space-y-4">
+                      <h4 className="text-sm font-extrabold text-red-400 uppercase tracking-widest">EMERGENCY RED FLAGS</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {result.warningSigns?.map((s, i) => (
+                          <div key={i} className="flex items-center space-x-3 p-4 bg-red-50/80 rounded-2xl border border-red-100 text-red-900 font-bold">
+                            <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
+                            <span>{s}</span>
+                          </div>
+                        ))}
+                      </div>
+                  </div>
+
+                  {/* Disclaimer Text */}
+                  <div className="p-4 bg-gray-50 rounded-2xl text-[10px] sm:text-xs font-bold text-gray-400 text-center uppercase tracking-widest leading-loose italic">
+                    {result.disclaimer}
+                  </div>
+               </div>
+            </GlassCard>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          {/* Left: Symptom Form */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-3xl shadow-lg border p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Describe Your Symptoms
-              </h2>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label className="block text-lg font-semibold text-gray-700 mb-3">
-                    What symptoms are you experiencing?
-                  </label>
-                  <textarea
-                    value={symptoms}
-                    onChange={(e) => setSymptoms(e.target.value)}
-                    placeholder="Describe your symptoms in detail..."
-                    rows={6}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm text-base placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                  <p className="text-sm text-gray-500 mt-2">
-                    Include details like when symptoms started, their severity,
-                    and any triggers.
-                  </p>
+        {/* Sidebar: History & Tips */}
+        <div className="space-y-10">
+          <h2 className="text-2xl font-extrabold text-gray-900 px-2">History</h2>
+          <div className="space-y-6">
+            {history.length > 0 ? (
+              history.map((check, i) => {
+                const checkDate = new Date(check.timestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+                return (
+                  <GlassCard key={i} className="p-6 border-transparent bg-gray-50/50 hover:bg-white group cursor-pointer transition-all duration-300">
+                    <div className="flex items-center justify-between mb-3">
+                      <Badge variant={getSeverityVariant(check.severity_level)} className="text-[10px] px-2.5">{check.severity_level}</Badge>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">{checkDate}</span>
+                    </div>
+                    <p className="text-sm font-bold text-gray-700 line-clamp-2 italic mb-3">"{check.symptoms_description}"</p>
+                    <div className="flex items-center text-primary-500 text-[11px] font-extrabold uppercase tracking-widest group-hover:translate-x-1 transition-transform">
+                      VIEW DETAILS <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                    </div>
+                  </GlassCard>
+                );
+              })
+            ) : (
+              <div className="p-10 text-center space-y-4">
+                <div className="p-4 bg-gray-50 rounded-3xl inline-block mx-auto">
+                  <History className="h-8 w-8 text-gray-300" />
                 </div>
-                <button
-                  type="submit"
-                  disabled={loading || !symptoms.trim()}
-                  className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      <span>Analyzing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Stethoscope className="h-5 w-5" />
-                      <span>Analyze Symptoms</span>
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
-
-            {/* Results */}
-            {result && (
-              <div className="mt-8 bg-white rounded-3xl shadow-lg border p-8 space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold text-gray-900">
-                    Analysis Results
-                  </h3>
-                  <div
-                    className={`px-3 py-1 rounded-full border text-sm font-semibold flex items-center gap-2 ${getSeverityColor(
-                      result.severity
-                    )}`}
-                  >
-                    {getSeverityIcon(result.severity)}
-                    <span className="capitalize">
-                      {result.severity} Priority
-                    </span>
-                  </div>
-                </div>
-
-                {/* Conditions */}
-                {result.possibleConditions?.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">
-                      Possible Conditions:
-                    </h4>
-                    <ul className="list-disc list-inside text-base text-gray-800 space-y-1">
-                      {result.possibleConditions.map((condition, idx) => (
-                        <li key={idx}>{condition}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Recommendations */}
-                {result.recommendations && (
-                  <div className="space-y-5">
-                    {result.recommendations.immediate?.length > 0 && (
-                      <div>
-                        <h4 className="font-semibold text-orange-700 mb-2 flex items-center gap-2">
-                          <Clock className="h-4 w-4" />
-                          Immediate Actions:
-                        </h4>
-                        <ul className="list-disc ml-5 text-base text-gray-800 space-y-1">
-                          {result.recommendations.immediate.map((item, idx) => (
-                            <li key={idx}>{item}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {result.recommendations.general?.length > 0 && (
-                      <div>
-                        <h4 className="font-semibold text-gray-900 mb-2">
-                          General Care:
-                        </h4>
-                        <ul className="list-disc list-inside text-base text-gray-800 space-y-1">
-                          {result.recommendations.general.map((item, idx) => (
-                            <li key={idx}>{item}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {result.recommendations.whenToSeekHelp && (
-                      <div className="bg-blue-100 p-4 rounded-lg">
-                        <h4 className="font-semibold text-blue-900 mb-1">
-                          When to Seek Help:
-                        </h4>
-                        <p className="text-base text-blue-800">
-                          {result.recommendations.whenToSeekHelp}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Warning Signs */}
-                {result.warningSigns?.length > 0 && (
-                  <div className="bg-red-100 p-4 rounded-lg">
-                    <h4 className="font-semibold text-red-900 mb-2 flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4" />
-                      Seek Immediate Medical Attention If:
-                    </h4>
-                    <ul className="list-disc list-inside text-base text-red-800 space-y-1">
-                      {result.warningSigns.map((sign, idx) => (
-                        <li key={idx}>{sign}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                <div className="bg-gray-100 p-3 rounded-lg text-sm text-gray-700 italic">
-                  {result.disclaimer}
-                </div>
+                <p className="text-sm font-bold text-gray-400 uppercase tracking-widest leading-relaxed">No Recent Reports Found</p>
               </div>
             )}
           </div>
 
-          {/* Right: Sidebar */}
-          <div className="space-y-8">
-        
-
-            {/* Emergency Numbers */}
-            <div className="bg-red-100 border border-red-200 rounded-3xl p-6">
-              <h3 className="text-lg font-bold text-red-900 mb-4 flex items-center gap-2">
-                <AlertCircle className="h-5 w-5" /> Emergency Numbers
-              </h3>
-              <div className="space-y-2 text-base">
-                <div className="flex justify-between text-red-800">
-                  <span>Ambulance:</span>
-                  <a href="tel:102" className="text-red-700 font-semibold">
-                    102
-                  </a>
-                </div>
-                <div className="flex justify-between text-red-800">
-                  <span>Fire:</span>
-                  <a href="tel:101" className="text-red-700 font-semibold">
-                    101
-                  </a>
-                </div>
-                <div className="flex justify-between text-red-800">
-                  <span>Police:</span>
-                  <a href="tel:100" className="text-red-700 font-semibold">
-                    100
-                  </a>
-                </div>
+          <div className="pt-4">
+            <GlassCard className="p-8 bg-primary-600 text-white border-transparent">
+              <div className="flex items-center space-x-3 mb-4">
+                <Sparkles className="h-5 w-5 text-primary-200" />
+                <h3 className="font-extrabold text-lg uppercase tracking-widest text-[10px]">AI Insight</h3>
               </div>
-            </div>
-
-            {/* Tips */}
-            <div className="bg-blue-100 border border-blue-300 rounded-3xl p-6">
-              <h3 className="text-lg font-bold text-blue-900 mb-4">
-                Tips for Better Results
-              </h3>
-              <ul className="text-base text-blue-800 space-y-2">
-                <li className="flex gap-2 items-start">
-                  <span>•</span>
-                  <span>Describe symptoms in detail</span>
-                </li>
-                <li className="flex gap-2 items-start">
-                  <span>•</span>
-                  <span>Mention when symptoms started</span>
-                </li>
-                <li className="flex gap-2 items-start">
-                  <span>•</span>
-                  <span>Include severity and triggers</span>
-                </li>
-                <li className="flex gap-2 items-start">
-                  <span>•</span>
-                  <span>Always consult a doctor for serious concerns</span>
-                </li>
-              </ul>
-            </div>
+              <p className="text-sm font-medium text-primary-50/80 leading-relaxed italic">
+                {history.length > 0 
+                  ? `You've checked ${history.length} reports recently. Be specific about symptoms for the most accurate AI guidance.` 
+                  : "Welcome! Describe your symptoms clearly, including duration and intensity, for the most accurate analysis."}
+              </p>
+            </GlassCard>
           </div>
         </div>
       </div>
