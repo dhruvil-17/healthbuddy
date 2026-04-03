@@ -75,12 +75,7 @@ export default function LandingPage() {
           </span>
         </div>
 
-        <nav className="hidden md:flex items-center space-x-8 text-sm font-bold text-gray-600">
-          <Link href="#features" className="hover:text-primary-600 transition-colors">Features</Link>
-          <Link href="#how-it-works" className="hover:text-primary-600 transition-colors">Process</Link>
-          <Link href="#about" className="hover:text-primary-600 transition-colors">Community</Link>
-        </nav>
-
+        
         <div className="flex items-center space-x-4">
           {isAuthenticated ? (
             <Link href="/dashboard">
