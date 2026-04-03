@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient, getSessionUser } from '@/lib/supabase-server'
-import { generateStructuredAI } from '@/lib/gemini'
+import { generateStructuredAI } from '@/lib/ai'
 
 export async function POST(request) {
   try {

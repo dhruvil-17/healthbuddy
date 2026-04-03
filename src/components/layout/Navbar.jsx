@@ -3,8 +3,10 @@ import React from "react";
 import { Bell, Search, User, Menu, Heart } from "lucide-react";
 import Avatar from "../ui/Avatar";
 import Button from "../ui/Button";
+  import { useRouter } from "next/navigation";
 
 const Navbar = ({ toggleSidebar, userProfile }) => {
+  const router = useRouter();
   return (
     <nav className="glass-nav sticky top-0 z-50 h-20 px-6 sm:px-10 flex items-center justify-between">
       {/* Mobile Toggle & Logo */}
@@ -22,14 +24,14 @@ const Navbar = ({ toggleSidebar, userProfile }) => {
       </div>
 
       {/* Global Search (Placeholder) */}
-      <div className="hidden md:flex items-center space-x-3 bg-gray-50 border border-gray-100 px-4 py-2.5 rounded-2xl w-96 group focus-within:bg-white focus-within:border-primary-500 focus-within:shadow-lg focus-within:shadow-primary-500/10 transition-all duration-300">
+      {/* <div className="hidden md:flex items-center space-x-3 bg-gray-50 border border-gray-100 px-4 py-2.5 rounded-2xl w-96 group focus-within:bg-white focus-within:border-primary-500 focus-within:shadow-lg focus-within:shadow-primary-500/10 transition-all duration-300">
         <Search className="h-5 w-5 text-gray-400 group-focus-within:text-primary-500 transition-colors" />
         <input 
           type="text" 
           placeholder="Search symptoms, facilities, medications..." 
           className="bg-transparent border-none outline-none w-full text-sm font-medium text-gray-700"
         />
-      </div>
+      </div> */}
 
       {/* Right Actions */}
       <div className="flex items-center space-x-4">
@@ -42,18 +44,18 @@ const Navbar = ({ toggleSidebar, userProfile }) => {
 
         <div className="flex items-center space-x-3">
           <div className="hidden sm:block text-right">
-            <p className="text-sm font-bold text-gray-900 leading-none mb-1">
+            {/* <p className="text-sm font-bold text-gray-900 leading-none mb-1">
               {userProfile?.full_name || "User"}
-            </p>
-            <p className="text-[10px] uppercase tracking-wider font-extrabold text-primary-500 leading-none">
-              Premium Plan
-            </p>
+            </p> */}
+          
           </div>
           <Avatar 
             src={userProfile?.avatar_url} 
             name={userProfile?.full_name} 
             size="md" 
             className="cursor-pointer border-2 border-white shadow-md ring-1 ring-gray-100"
+            onClick={() => router.push("/profile")}
+            
           />
         </div>
       </div>

@@ -120,7 +120,7 @@ export default function SymptomCheckerPage() {
             <span className="text-primary-100">Checker</span>
           </h1>
           <p className="text-lg text-primary-50/80 font-medium leading-relaxed">
-            Describe your concerns and get instant medical-grade insights powered by Gemini 2.0.
+            Describe your concerns and get instant medical-grade insights powered by advanced AI.
           </p>
         </div>
         <Stethoscope className="absolute right-12 bottom-12 h-32 w-32 text-white/5 opacity-50 rotate-12" />

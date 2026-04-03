@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient, getSessionUser } from '@/lib/supabase-server'
-import { analyzeSymptoms } from '@/lib/gemini'
+import { analyzeSymptoms } from '@/lib/ai'
 
 export async function POST(request) {
   try {

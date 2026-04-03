@@ -1,27 +1,40 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-
 /**
- * Generic function to generate structured (JSON) content from Gemini.
- * @param {string} prompt - The prompt to send to Gemini.
- * @param {string} modelName - Gemini model to use (default: gemini-2.0-flash).
+ * Generic function to generate structured (JSON) content from AI via OpenRouter.
+ * @param {string} prompt - The prompt to send.
+ * @param {string} modelName - OpenRouter model to use (default: google/gemini-2.0-flash-exp:free).
  * @returns {Promise<Object>} - Parsed JSON object.
  */
-export const generateStructuredAI = async (prompt, modelName = "gemini-2.0-flash") => {
-  if (!process.env.GEMINI_API_KEY) {
-    throw new Error("GEMINI_API_KEY is not configured");
+export const generateStructuredAI = async (prompt, modelName = "openai/gpt-4o-mini") => {
+  if (!process.env.OPENROUTER_API_KEY) {
+    throw new Error("OPENROUTER_API_KEY is not configured");
   }
 
-  const model = genAI.getGenerativeModel({ 
-    model: modelName,
-  });
-
   try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "HTTP-Referer": "https://healthbuddy.ai", // Required for OpenRouter
+        "X-Title": "HealthBuddy AI Assistant", // Required for OpenRouter
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: modelName,
+        messages: [{ role: "user", content: prompt }],
+        response_format: { type: "json_object" } // Enforce JSON for compatible models
+      })
+    });
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        throw new Error("429: AI service is temporarily reaching its capacity/quota. Please try again in a few minutes.");
+      }
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(`OpenRouter Error ${response.status}: ${errData.error?.message || "Unknown Error"}`);
+    }
+
+    const result = await response.json();
+    const text = result.choices?.[0]?.message?.content || "";
     
     // Improved JSON cleaning and parsing
     const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -32,12 +45,12 @@ export const generateStructuredAI = async (prompt, modelName = "gemini-2.0-flash
     return JSON.parse(jsonMatch[0]);
   } catch (error) {
     if (error.status === 429 || error.message?.includes('429') || error.message?.includes('quota')) {
-      console.error(`Gemini Quota Exceeded [${modelName}]. Please check your API billing or wait for reset.`);
+      console.error(`AI Quota Exceeded [${modelName}]. Please check your API billing or wait for reset.`);
       const quotaError = new Error("AI service is temporarily reaching its capacity/quota. Please try again in a few minutes.");
       quotaError.status = 429;
       throw quotaError;
     }
-    console.error(`Gemini generation failed [${modelName}]:`, error);
+    console.error(`AI generation failed [${modelName}]:`, error);
     throw error;
   }
 };
