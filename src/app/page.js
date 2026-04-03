@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { 
   Heart, 
   Shield, 
@@ -24,7 +25,7 @@ import Badge from "@/components/ui/Badge";
 export default function LandingPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-
+  const router = useRouter();
   useEffect(() => {
     setIsVisible(true);
     const checkAuth = async () => {
@@ -203,7 +204,8 @@ export default function LandingPage() {
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-primary-600 transition-colors">{f.title}</h3>
               <p className="text-gray-600 leading-relaxed font-medium">{f.description}</p>
-              <div className="mt-8 flex items-center text-primary-600 font-bold group-hover:translate-x-2 transition-transform">
+              <div className="mt-8 flex items-center text-primary-600 font-bold group-hover:translate-x-2 transition-transform"
+              onClick={() => {router.push("/register")}} >
                 Learn more <ArrowRight className="h-5 w-5 ml-2" />
               </div>
             </GlassCard>
