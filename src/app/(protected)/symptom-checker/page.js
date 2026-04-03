@@ -33,13 +33,8 @@ export default function SymptomCheckerPage() {
   const [result, setResult] = useState(null);
   const [history, setHistory] = useState([]);
 
-  useEffect(() => {
-    if (user) {
-      fetchHistory();
-    }
-  }, [user]);
-
-  const fetchHistory = async () => {
+  const fetchHistory = React.useCallback(async () => {
+    if (!user) return;
     try {
       const response = await fetch(`/api/symptom-checker?userId=${user.id}&limit=5`);
       const data = await response.json();
@@ -49,7 +44,11 @@ export default function SymptomCheckerPage() {
     } catch (error) {
       console.error("Error fetching history:", error);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    fetchHistory();
+  }, [fetchHistory]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -248,7 +247,7 @@ export default function SymptomCheckerPage() {
                       <Badge variant={getSeverityVariant(check.severity_level)} className="text-[10px] px-2.5">{check.severity_level}</Badge>
                       <span className="text-[10px] font-bold text-gray-400 uppercase">{checkDate}</span>
                     </div>
-                    <p className="text-sm font-bold text-gray-700 line-clamp-2 italic mb-3">"{check.symptoms_description}"</p>
+                    <p className="text-sm font-bold text-gray-700 line-clamp-2 italic mb-3">&quot;{check.symptoms_description}&quot;</p>
                     <div className="flex items-center text-primary-500 text-[11px] font-extrabold uppercase tracking-widest group-hover:translate-x-1 transition-transform">
                       VIEW DETAILS <ChevronRight className="h-3.5 w-3.5 ml-1" />
                     </div>

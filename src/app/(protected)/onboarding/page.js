@@ -95,7 +95,7 @@ export default function OnboardingPage() {
             Healthcare Revolution
           </Badge>
           <h1 className="text-4xl sm:text-6xl font-extrabold text-gray-900 leading-[1.1]">
-            Let's build your <br />
+            Let&apos;s build your <br />
             <span className="bg-gradient-to-r from-primary-600 to-accent-500 bg-clip-text text-transparent">Health Profile</span>
           </h1>
           <p className="text-lg text-gray-500 font-medium leading-relaxed">

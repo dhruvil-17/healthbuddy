@@ -99,7 +99,7 @@ export default function RegisterPage() {
           <div className="space-y-4">
             <h2 className="text-3xl font-black text-gray-900 italic tracking-tight">Verify Your Account</h2>
             <p className="text-gray-500 font-medium leading-relaxed">
-              We've sent a secure confirmation link to <span className="text-primary-600 font-extrabold">{formData.email}</span>. Please check your inbox and verify your email to continue.
+              We&apos;ve sent a secure confirmation link to <span className="text-primary-600 font-extrabold">{formData.email}</span>. Please check your inbox and verify your email to continue.
             </p>
           </div>
           <div className="pt-6">

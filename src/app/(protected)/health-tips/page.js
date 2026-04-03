@@ -45,7 +45,7 @@ export default function HealthTips() {
     { id: 'preventive', name: 'Preventive', icon: Shield, color: 'bg-indigo-100 text-indigo-600' }
   ];
 
-  const generateHealthTips = async (userId, category = selectedCategory) => {
+  const generateHealthTips = React.useCallback(async (userId, category = selectedCategory) => {
     setGenerating(true);
     try {
       const response = await fetch('/api/health-tips', {
@@ -60,11 +60,11 @@ export default function HealthTips() {
     } finally {
       setGenerating(false);
     }
-  };
+  }, [selectedCategory]);
 
   useEffect(() => {
     if (profile) generateHealthTips(profile.id, selectedCategory);
-  }, [selectedCategory, profile]);
+  }, [selectedCategory, profile, generateHealthTips]);
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
@@ -157,7 +157,7 @@ export default function HealthTips() {
                 <span className="font-extrabold uppercase tracking-widest text-[10px]">Quick Stat</span>
               </div>
               <p className="text-sm font-medium text-blue-50/80 leading-relaxed italic">
-                "Users following personalized tips report a 25% increase in daily energy levels."
+                &quot;Users following personalized tips report a 25% increase in daily energy levels.&quot;
               </p>
            </GlassCard>
         </div>
@@ -198,7 +198,7 @@ export default function HealthTips() {
                                     {tip.priority} priority
                                  </Badge>
                               </div>
-                              <p className="text-gray-600 font-medium leading-relaxed italic">"{tip.description}"</p>
+                              <p className="text-gray-600 font-medium leading-relaxed italic">&quot;{tip.description}&quot;</p>
                            </div>
                         ))}
                      </div>
@@ -294,7 +294,7 @@ export default function HealthTips() {
                    <Info className="h-12 w-12 text-slate-300" />
                 </div>
                 <h3 className="text-xl font-extrabold text-gray-900">No Intelligence Found</h3>
-                <p className="text-gray-500 font-medium">Click "Refresh Tips" to re-synchronize your personalized wellness data.</p>
+                <p className="text-gray-500 font-medium">Click &quot;Refresh Tips&quot; to re-synchronize your personalized wellness data.</p>
                 <Button onClick={() => profile && generateHealthTips(profile.id)}>Refresh Wellness Data</Button>
              </div>
            )}

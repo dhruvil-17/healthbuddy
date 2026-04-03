@@ -265,7 +265,7 @@ export default function MedicineRemindersPage() {
                  <div className="py-24 bg-white/50 border-2 border-dashed border-gray-200 rounded-[3rem] text-center flex flex-col items-center justify-center space-y-6">
                     <div className="p-6 bg-gray-100 rounded-full"><Clock className="h-12 w-12 text-gray-300" /></div>
                     <h3 className="text-2xl font-extrabold text-gray-900">End of Schedule</h3>
-                    <p className="text-gray-500 font-medium max-w-sm italic">You've completed all scheduled doses for today. Stay hydrated!</p>
+                    <p className="text-gray-500 font-medium max-w-sm italic">You&apos;ve completed all scheduled doses for today. Stay hydrated!</p>
                  </div>
                )}
             </div>
@@ -338,7 +338,7 @@ export default function MedicineRemindersPage() {
                 <span className="font-extrabold uppercase tracking-widest text-[10px]">Smart Tip</span>
               </div>
               <p className="text-sm font-medium text-violet-50/80 leading-relaxed italic">
-                "Maintaining a 95%+ adherence rate reduces long-term hospitalization risk by up to 40% based on recent clinical studies."
+                &quot;Maintaining a 95%+ adherence rate reduces long-term hospitalization risk by up to 40% based on recent clinical studies.&quot;
               </p>
            </GlassCard>
         </div>

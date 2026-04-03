@@ -21,7 +21,8 @@ import {
   ChevronRight,
   Sparkles,
   ShieldCheck,
-  Zap
+  Zap,
+  Plus
 } from "lucide-react";
 import { useProtectedUser } from "@/hooks/useProtectedUser";
 import Button from "@/components/ui/Button";
@@ -64,7 +65,7 @@ export default function FacilityFinderPage() {
     { value: "emergency", label: "Emergency", icon: AlertCircle },
   ];
 
-  const searchFacilities = async () => {
+  const searchFacilities = React.useCallback(async () => {
     if (!selectedCity) return;
     setLoading(true);
     try {
@@ -82,11 +83,11 @@ export default function FacilityFinderPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user.id, selectedCity, facilityType, radius]);
 
   useEffect(() => {
     if (selectedCity) searchFacilities();
-  }, [facilityType, radius]);
+  }, [selectedCity, searchFacilities]);
 
   const getFacilityIcon = (type) => {
     const typeData = facilityTypes.find((t) => t.value === type);
@@ -277,7 +278,7 @@ export default function FacilityFinderPage() {
              <div className="bg-white border border-gray-100 rounded-[2.5rem] py-24 text-center flex flex-col items-center justify-center space-y-6">
                 <div className="p-8 bg-red-50 rounded-full"><AlertCircle className="h-10 w-10 text-red-300" /></div>
                 <h3 className="text-2xl font-extrabold text-gray-900">No Facilities Found</h3>
-                <p className="text-gray-500 font-medium max-w-md">We couldn't find any matches in {selectedCity} for "{facilityType}". Try expanding your search radius or selecting a different type.</p>
+                <p className="text-gray-500 font-medium max-w-md">We couldn&apos;t find any matches in {selectedCity} for &quot;{facilityType}&quot;. Try expanding your search radius or selecting a different type.</p>
                 <Button variant="ghost" onClick={() => { setFacilityType('all'); setRadius(50); }}>Expand Search Radius</Button>
              </div>
            )}

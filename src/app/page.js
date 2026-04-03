@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { 
   Heart, 
   Shield, 
@@ -135,8 +136,8 @@ export default function LandingPage() {
             <div className="flex items-center space-x-6 pt-6">
               <div className="flex -space-x-3">
                 {[1,2,3,4].map(i => (
-                  <div key={i} className="w-12 h-12 rounded-2xl border-4 border-white bg-gray-100 overflow-hidden shadow-sm">
-                    <img src={`https://i.pravatar.cc/150?u=${i}`} alt="user" className="w-full h-full object-cover" />
+                  <div key={i} className="w-12 h-12 rounded-2xl border-4 border-white bg-gray-100 overflow-hidden shadow-sm relative">
+                    <Image src={`https://i.pravatar.cc/150?u=${i}`} alt="user" fill className="object-cover" />
                   </div>
                 ))}
               </div>
@@ -150,11 +151,13 @@ export default function LandingPage() {
           </div>
 
           <div className={`relative transition-all duration-1000 delay-500 ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
-            <div className="relative z-10 rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white/50 backdrop-blur-sm">
-              <img 
+            <div className="relative z-10 rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white/50 backdrop-blur-sm aspect-square">
+              <Image 
                 src="/images/hero_bg.png" 
                 alt="Healthcare AI" 
-                className="w-full aspect-square object-cover"
+                fill
+                priority
+                className="object-cover"
               />
             </div>
             

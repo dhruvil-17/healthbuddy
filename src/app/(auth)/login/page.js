@@ -125,7 +125,7 @@ export default function LoginPage() {
         
         <div className="flex flex-col items-center space-y-6">
           <p className="text-sm font-bold text-gray-500">
-            Don't have an account yet?{' '}
+            Don&apos;t have an account yet?{' '}
             <Link href="/register" className="text-primary-600 hover:text-primary-700 font-black italic ml-1">
               Join for Free
             </Link>
