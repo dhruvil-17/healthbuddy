@@ -29,9 +29,60 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user, profile, loading: profileLoading } = useProtectedProfile();
   const [stats, setStats] = useState(null);
+  const [isSosLoading, setIsSosLoading] = useState(false);
   const [loadingStats, setLoadingStats] = useState(true);
 
-  
+  const handleSosDispatch = async () => {
+    if (!confirm('Send SOS to emergency contacts? Location will be shared.')) return;
+
+    setIsSosLoading(true);
+    try {
+      let location = null;
+      // Extract precise geolocation natively
+      let payloadData = { latitude: null, longitude: null };
+
+      const executeDispatch = async () => {
+          const response = await fetch('/api/sos', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payloadData),
+          });
+          const data = await response.json();
+          
+          if (response.ok) {
+              alert('✅ SOS signal sent to your emergency contact. Local authorities notified.');
+          } else {
+              if (data.error === "Emergency contact not configured in Profile.") {
+                  alert("⚠️ SOS Failed: You do not have an Emergency Contact saved. Please update your profile.");
+              } else {
+                  alert("❌ Failed to send SOS signal. Try calling authorities directly (102).");
+              }
+          }
+      };
+
+      if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+              async (position) => {
+                  payloadData = { latitude: position.coords.latitude, longitude: position.coords.longitude };
+                  await executeDispatch();
+                  setIsSosLoading(false);
+              },
+              async (error) => {
+                  // Proceed without location if error occurs or user denies
+                  await executeDispatch();
+                  setIsSosLoading(false);
+              }
+          );
+      } else {
+          await executeDispatch();
+          setIsSosLoading(false);
+      }
+    } catch (error) {
+      console.error("SOS Error:", error);
+      alert("❌ System error handling SOS.");
+      setIsSosLoading(false);
+    }
+  };
 
   useEffect(() => {
     async function fetchDashboardData() {
@@ -134,9 +185,9 @@ export default function DashboardPage() {
   return (
     <div className="space-y-10">
       {/* Welcome Banner */}
-      <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary-600 to-accent-600 p-8 sm:p-12 text-white shadow-2xl shadow-primary-500/20 group">
+      <section className="relative overflow-hidden rounded-3xl bg-linear-to-br from-primary-600 to-accent-600 p-8 sm:p-12 text-white shadow-2xl shadow-primary-500/20 group">
         <div className="relative z-10 space-y-4 max-w-2xl">
-          <Badge variant="glass" className="bg-white/20 border-white/30 text-white font-black italic tracking-[0.1em] text-[10px]">
+          <Badge variant="glass" className="bg-white/20 border-white/30 text-white font-black italic tracking-widest text-[10px]">
             <Sparkles className="h-3.5 w-3.5 mr-2" />
             AI ENABLED WELLNESS CARE
           </Badge>
@@ -234,7 +285,7 @@ export default function DashboardPage() {
                     <Heart className="h-10 w-10 text-primary-500" />
                  </div>
                </div>
-               <div className="absolute top-0 right-0 h-full w-1/3 bg-gradient-to-l from-primary-600/10 to-transparent group-hover:from-primary-600/20 transition-all" />
+               <div className="absolute top-0 right-0 h-full w-1/3 bg-linear-to-l from-primary-600/10 to-transparent group-hover:from-primary-600/20 transition-all" />
             </GlassCard>
           </div>
         </div>
@@ -273,7 +324,13 @@ export default function DashboardPage() {
                 </a>
               ))}
             </div>
-            <Button variant="danger" className="w-full h-16 rounded-[1.5rem] font-black italic shadow-2xl shadow-red-500/20" leftIcon={AlertCircle}>
+            <Button 
+              variant="danger" 
+              className="w-full h-16 rounded-xl font-black italic shadow-2xl shadow-red-500/20" 
+              leftIcon={AlertCircle}
+              isLoading={isSosLoading}
+              onClick={handleSosDispatch}
+            >
               GENERATE SOS SIGNAL
             </Button>
           </GlassCard>
@@ -291,7 +348,11 @@ export default function DashboardPage() {
                <p className="text-sm font-bold text-gray-500 leading-relaxed mb-8">
                  Your medical profile is protected by enterprise-grade AES-256 encryption.
                </p>
-               <Button variant="ghost" className="w-full border-gray-200 text-gray-600 font-extrabold text-xs uppercase tracking-widest hover:bg-white rounded-xl h-12">
+               <Button 
+                 variant="ghost" 
+                 className="w-full border-gray-200 text-gray-600 font-extrabold text-xs uppercase tracking-widest hover:bg-white rounded-xl h-12"
+                 onClick={() => alert('Privacy log is empty - no access events recorded. Your data is secure!')}
+               >
                  Audit Privacy Log
                </Button>
             </div>

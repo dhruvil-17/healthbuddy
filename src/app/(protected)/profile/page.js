@@ -1,6 +1,6 @@
 'use client'
-import { useState, useEffect } from 'react'; 
-import { getUserProfile , updateUserProfile } from '@/utils/profileService';
+import { useState, useEffect } from 'react';
+import { getUserProfile, updateUserProfile } from '@/utils/profileService';
 import { useProtectedProfile } from '@/hooks/useProtectedProfile';
 import Loader from '@/components/ui/Loader';
 import { useRouter } from 'next/navigation';
@@ -10,17 +10,14 @@ export default function ProfilePage() {
   const router = useRouter();
 
 
-    const {  profile, loading , setProfile } = useProtectedProfile()
-
- 
-
+  const { profile, loading, setProfile } = useProtectedProfile()
 
 
   const handleSave = async (profileData) => {
     try {
       const updatedProfile = await updateUserProfile(profileData);
       setProfile(updatedProfile);
-      router.push('/dashboard'); 
+      router.push('/dashboard');
     } catch (error) {
       console.error('Error saving profile:', error);
     }
@@ -31,7 +28,7 @@ export default function ProfilePage() {
   };
 
   if (loading) {
-    return <Loader/>;
+    return <Loader />;
   }
 
   return (

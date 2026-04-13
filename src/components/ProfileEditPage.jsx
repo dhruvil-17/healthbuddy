@@ -21,7 +21,7 @@ import Input from './ui/Input';
 import Badge from './ui/Badge';
 import Avatar from './ui/Avatar';
 
-const ProfileEditPage = ({ initialProfile, onSave, onCancel }) => {
+export const ProfileEditPage = ({ initialProfile, onSave, onCancel }) => {
   const [profile, setProfile] = useState({
     age: '',
     gender: '',
@@ -94,7 +94,7 @@ const ProfileEditPage = ({ initialProfile, onSave, onCancel }) => {
   return (
     <div className="space-y-10 pb-20">
       {/* Header Banner */}
-      <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary-600 to-indigo-700 p-8 sm:p-12 text-white shadow-2xl shadow-primary-500/20">
+      <section className="relative overflow-hidden rounded-3xl bg-linear-to-br from-primary-600 to-indigo-700 p-8 sm:p-12 text-white shadow-2xl shadow-primary-500/20">
         <div className="relative z-10 space-y-4 max-w-2xl flex items-center space-x-8">
            <Avatar name={initialProfile?.full_name} size="xl" className="hidden md:flex border-4 border-white/20" />
            <div className="space-y-3">
@@ -171,7 +171,6 @@ const ProfileEditPage = ({ initialProfile, onSave, onCancel }) => {
             </div>
           </GlassCard>
 
-          {/* Emergency Contact */}
           <GlassCard className="p-10 border-transparent shadow-xl ring-1 ring-gray-100">
             <h2 className="text-2xl font-extrabold text-gray-900 mb-8 flex items-center">
               <Phone className="h-6 w-6 mr-3 text-red-500" />
@@ -213,7 +212,7 @@ const ProfileEditPage = ({ initialProfile, onSave, onCancel }) => {
                 className="flex-1"
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCondition())}
               />
-              <Button onClick={addCondition} className="h-[52px] w-12 flex-shrink-0" leftIcon={Plus} />
+              <Button onClick={addCondition} className="h-[52px] shrink-0   " leftIcon={Plus} />
             </div>
 
             <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">

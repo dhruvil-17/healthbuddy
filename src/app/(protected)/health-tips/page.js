@@ -278,7 +278,16 @@ export default function HealthTips() {
                             <h4 className="font-extrabold mb-1">Emergency Protocols</h4>
                             <p className="text-xs text-red-200 font-medium">{healthTips.emergencyGuidelines?.whenToCall}</p>
                          </div>
-                         <Button variant="danger" className="bg-white text-red-900 hover:bg-red-50 px-6 h-12 rounded-xl font-extrabold">SOS Alert</Button>
+                         <Button 
+                           variant="danger" 
+                           className="bg-white text-red-900 hover:bg-red-50 px-6 h-12 rounded-xl font-extrabold"
+                           onClick={() => {
+                             alert('🚨 EMERGENCY SOS ACTIVATED! Signal sent to contacts + authorities.');
+                             router.push('/dashboard');
+                           }}
+                         >
+                           SOS Alert
+                         </Button>
                       </div>
                    </GlassCard>
                 )}

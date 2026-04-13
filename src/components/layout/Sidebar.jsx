@@ -114,13 +114,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           </div>
         </div>
 
-        {/* Toggle Button for Mobile/Minified */}
-        <button 
-          onClick={toggleSidebar}
-          className="lg:hidden absolute -right-12 top-4 bg-white/80 backdrop-blur-md p-2 rounded-xl border border-white/20 shadow-xl"
-        >
-          <Menu className="h-6 w-6 text-primary-600" />
-        </button>
       </aside>
     </>
   );

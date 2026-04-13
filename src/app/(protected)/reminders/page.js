@@ -99,6 +99,7 @@ export default function MedicineRemindersPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!user) return;
     try {
       const method = editingReminder ? 'PUT' : 'POST';
       const payload = { ...formData, userId: user.id };
@@ -134,6 +135,7 @@ export default function MedicineRemindersPage() {
   };
 
   const updateMedicineStatus = async (item, status) => {
+    if (!user) return;
     try {
       const response = await fetch('/api/medicine-logs', {
         method: 'POST',
@@ -153,7 +155,7 @@ export default function MedicineRemindersPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Remove this schedule?')) return;
+    if (!confirm('Remove this schedule?') || !user) return;
     try {
       const res = await fetch(`/api/medicine-reminders?reminderId=${id}&userId=${user.id}`, { method: 'DELETE' });
       if (res.ok) await loadData(user.id);

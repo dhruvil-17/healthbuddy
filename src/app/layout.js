@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "health Care AI",
+  title: "HealthBuddy - Your AI Health Assistant",
   description: "your health care assistant",
 };
 
