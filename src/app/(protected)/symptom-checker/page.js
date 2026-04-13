@@ -24,6 +24,7 @@ import Badge from "@/components/ui/Badge";
 import Input from "@/components/ui/Input";
 import Skeleton from "@/components/ui/Skeleton";
 import { useProtectedProfile } from "@/hooks/useProtectedProfile";
+import { toast } from "sonner";
 
 export default function SymptomCheckerPage() {
   const router = useRouter();
@@ -70,11 +71,15 @@ export default function SymptomCheckerPage() {
         setResult(data.data);
         fetchHistory(); // Refresh history
       } else {
-        alert(data.error || "Failed to analyze symptoms");
+        toast.error('Analysis Failed', {
+          description: data.error || "Failed to analyze symptoms"
+        });
       }
     } catch (error) {
       console.error("Error:", error);
-      alert("Analysis failed. Please try again.");
+      toast.error('Analysis Failed', {
+        description: "Analysis failed. Please try again."
+      });
     } finally {
       setIsAnalyzing(false);
     }

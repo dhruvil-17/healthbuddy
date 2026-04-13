@@ -27,7 +27,7 @@ const Navbar = ({ toggleSidebar, userProfile }) => {
         </button>
         <div className="lg:hidden flex items-center space-x-2">
           <Heart className="h-7 w-7 text-primary-600" />
-          <span className="font-bold text-xl tracking-tight">HealthCare+</span>
+          <span className="font-bold text-xl tracking-tight">HealthBuddy</span>
         </div>
       </div>
 

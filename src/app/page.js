@@ -72,7 +72,7 @@ export default function LandingPage() {
             <Heart className="h-6 w-6 text-white" />
           </div>
           <span className="text-2xl font-extrabold bg-gradient-to-r from-primary-700 to-accent-600 bg-clip-text text-transparent italic">
-            HealthCare+
+            HealthBuddy
           </span>
         </div>
 
@@ -221,7 +221,7 @@ export default function LandingPage() {
               <div className="bg-primary-600 p-2 rounded-xl">
                 <Heart className="h-6 w-6" />
               </div>
-              <span className="text-2xl font-bold italic tracking-tight">HealthCare+</span>
+              <span className="text-2xl font-bold italic tracking-tight">HealthBuddy</span>
             </div>
             <p className="text-slate-400 max-w-sm leading-relaxed">
               Making professional healthcare accessible and affordable for underserved communities worldwide through the power of AI.
@@ -247,7 +247,7 @@ export default function LandingPage() {
           </div>
         </div>
         <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-slate-800 text-center text-slate-500 text-sm font-bold">
-          © 2024 HealthCare+ AI Technologies. All rights reserved.
+          © 2024 HealthBuddy AI Technologies. All rights reserved.
         </div>
       </footer>
     </div>

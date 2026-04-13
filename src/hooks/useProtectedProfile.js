@@ -32,6 +32,19 @@ export function useProtectedProfile() {
           full_name: user?.user_metadata?.full_name || 'User'
         }
         
+        // Handle emergency contacts migration
+        if (augmentedProfile.emergency_contacts && !Array.isArray(augmentedProfile.emergency_contacts)) {
+          augmentedProfile.emergency_contacts = [];
+        }
+        
+        // Migrate from single contact to multiple contacts if needed
+        if (!augmentedProfile.emergency_contacts?.length && augmentedProfile.emergency_contact_name) {
+          augmentedProfile.emergency_contacts = [{
+            name: augmentedProfile.emergency_contact_name,
+            phone: augmentedProfile.emergency_contact_phone || ''
+          }];
+        }
+        
         setProfile(augmentedProfile)
       } catch (error) {
         console.error('Error fetching profile in hook:', error)

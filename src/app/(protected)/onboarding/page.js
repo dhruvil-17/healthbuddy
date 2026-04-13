@@ -22,6 +22,7 @@ import GlassCard from "@/components/ui/GlassCard";
 import Badge from "@/components/ui/Badge";
 import Avatar from "@/components/ui/Avatar";
 import { useProtectedUser } from "@/hooks/useProtectedUser";
+import { toast } from "sonner";
 import Loader from "@/components/ui/Loader";
 
 export default function OnboardingPage() {
@@ -73,7 +74,9 @@ export default function OnboardingPage() {
       router.push("/dashboard");
     } catch (error) {
       console.error("Error creating profile:", error);
-      alert("Failed to save profile. Please try again.");
+      toast.error('Profile Error', {
+        description: "Failed to save profile. Please try again."
+      });
     } finally {
       setLoading(false);
     }
@@ -99,7 +102,7 @@ export default function OnboardingPage() {
             <span className="bg-gradient-to-r from-primary-600 to-accent-500 bg-clip-text text-transparent">Health Profile</span>
           </h1>
           <p className="text-lg text-gray-500 font-medium leading-relaxed">
-            Welcome to HealthCare+. Completing these steps helps us provide personalized AI insights tailored to your needs.
+            Welcome to HealthBuddy. Completing these steps helps us provide personalized AI insights tailored to your needs.
           </p>
 
           <div className="space-y-6 pt-4">

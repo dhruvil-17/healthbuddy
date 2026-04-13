@@ -127,7 +127,7 @@ export default function RegisterPage() {
               <Heart className="h-6 w-6 text-white" />
             </div>
             <span className="text-2xl font-extrabold bg-gradient-to-r from-primary-700 to-accent-600 bg-clip-text text-transparent italic tracking-tight">
-              HealthCare+
+              HealthBuddy
             </span>
           </Link>
           <h1 className="text-4xl font-black text-gray-900 tracking-tight italic">Join the Community</h1>

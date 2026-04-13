@@ -5,6 +5,7 @@ import {
   Stethoscope, 
   MapPin, 
   Pill, 
+  Phone,
   Users, 
   Activity, 
   Heart, 
@@ -19,6 +20,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { useProtectedProfile } from "@/hooks/useProtectedProfile";
+import { toast } from "sonner";
 import Button from "@/components/ui/Button";
 import GlassCard from "@/components/ui/GlassCard";
 import Badge from "@/components/ui/Badge";
@@ -50,12 +52,18 @@ export default function DashboardPage() {
           const data = await response.json();
           
           if (response.ok) {
-              alert('✅ SOS signal sent to your emergency contact. Local authorities notified.');
+              toast.success('SOS Sent Successfully', {
+                description: 'Signal sent to your emergency contacts. Local authorities notified.'
+              });
           } else {
-              if (data.error === "Emergency contact not configured in Profile.") {
-                  alert("⚠️ SOS Failed: You do not have an Emergency Contact saved. Please update your profile.");
+              if (data.error === "Emergency contacts not configured in Profile.") {
+                  toast.error('SOS Failed', {
+                    description: 'You do not have Emergency Contacts saved. Please update your profile.'
+                  });
               } else {
-                  alert("❌ Failed to send SOS signal. Try calling authorities directly (102).");
+                  toast.error('SOS Failed', {
+                    description: 'Failed to send SOS signal. Try calling authorities directly (102).'
+                  });
               }
           }
       };
@@ -79,7 +87,9 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error("SOS Error:", error);
-      alert("❌ System error handling SOS.");
+      toast.error('System Error', {
+        description: 'System error handling SOS.'
+      });
       setIsSosLoading(false);
     }
   };
@@ -298,12 +308,44 @@ export default function DashboardPage() {
           </div>
           
           <GlassCard className="bg-red-50/50 border-red-100 p-10 space-y-8 shadow-xl shadow-red-500/5">
-            <div className="flex items-center space-x-5">
-              <Avatar name={profile?.emergency_contact_name} size="lg" className="border-4 border-white shadow-lg" />
-              <div>
-                <h3 className="font-extrabold text-red-950 text-xl leading-none italic">{profile?.emergency_contact_name || "Emergency Contact"}</h3>
-                <p className="text-red-700/80 text-xs font-black uppercase tracking-widest mt-2">{profile?.emergency_contact_phone || "No Number Set"}</p>
-              </div>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-extrabold text-red-950 text-xl leading-none italic">Emergency Contacts</h3>
+              <Badge variant="danger" className="text-xs">
+                {profile?.emergency_contacts?.length || 0} Contacts
+              </Badge>
+            </div>
+            
+            {/* Emergency Contacts List */}
+            <div className="space-y-4">
+              {profile?.emergency_contacts?.slice(0, 3).map((contact, index) => (
+                <div key={index} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-red-100/50 hover:border-red-500 transition-all group">
+                  <div className="flex items-center space-x-4">
+                    <Avatar name={contact.name} size="sm" className="border-2 border-red-200" />
+                    <div>
+                      <p className="font-bold text-gray-900 italic">{contact.name}</p>
+                      <p className="text-xs text-red-700 font-bold uppercase tracking-widest">{contact.phone}</p>
+                    </div>
+                  </div>
+                  <a 
+                    href={`tel:${contact.phone}`}
+                    className="p-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors group-hover:scale-110"
+                  >
+                    <Phone className="h-4 w-4" />
+                  </a>
+                </div>
+              ))}
+              {(!profile?.emergency_contacts?.length) && (
+                <div className="text-center py-8">
+                  <AlertCircle className="h-12 w-12 text-red-300 mx-auto mb-4" />
+                  <p className="text-red-700 font-bold">No emergency contacts configured</p>
+                  <p className="text-red-600 text-sm mt-2">Add contacts in your profile for safety</p>
+                </div>
+              )}
+              {(profile?.emergency_contacts?.length > 3) && (
+                <p className="text-xs text-red-600 font-bold text-center italic">
+                  +{profile.emergency_contacts.length - 3} more contacts in profile
+                </p>
+              )}
             </div>
             
             <div className="space-y-4">
@@ -351,7 +393,9 @@ export default function DashboardPage() {
                <Button 
                  variant="ghost" 
                  className="w-full border-gray-200 text-gray-600 font-extrabold text-xs uppercase tracking-widest hover:bg-white rounded-xl h-12"
-                 onClick={() => alert('Privacy log is empty - no access events recorded. Your data is secure!')}
+                 onClick={() => toast.success('Privacy Log', {
+                   description: 'Privacy log is empty - no access events recorded. Your data is secure!'
+                 })}
                >
                  Audit Privacy Log
                </Button>

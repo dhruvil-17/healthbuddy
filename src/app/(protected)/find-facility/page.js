@@ -25,6 +25,7 @@ import {
   Plus
 } from "lucide-react";
 import { useProtectedUser } from "@/hooks/useProtectedUser";
+import { toast } from "sonner";
 import Button from "@/components/ui/Button";
 import GlassCard from "@/components/ui/GlassCard";
 import Badge from "@/components/ui/Badge";
@@ -85,7 +86,9 @@ export default function FacilityFinderPage() {
 
   const handleShareLocation = () => {
     if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
+      toast.error('Location Error', {
+        description: 'Geolocation is not supported by your browser'
+      });
       return;
     }
 
@@ -99,7 +102,7 @@ export default function FacilityFinderPage() {
           // in a real app, we'd use a geocoding service here.
           // Since our backend is city-based, we'll try to find the nearest supported city.
           setSelectedCity("Mumbai"); // Defaulting to Mumbai for demonstration
-          // searchFacilities is triggered by the useEffect watching selectedCity
+          // searchFacilities is triggered by useEffect watching selectedCity
         } catch (error) {
           console.error("Error share location:", error);
         } finally {
@@ -109,7 +112,9 @@ export default function FacilityFinderPage() {
       (error) => {
         console.error("Geolocation error:", error);
         setLocationLoading(false);
-        alert("Unable to retrieve your location");
+        toast.error('Location Error', {
+          description: 'Unable to retrieve your location'
+        });
       }
     );
   };
@@ -336,7 +341,9 @@ export default function FacilityFinderPage() {
                       className="bg-red-800 text-white hover:bg-white/10 px-8 h-12 rounded-xl font-bold border-white/20"
                       onClick={() => {
                         if (confirm(`Trigger SOS in ${selectedCity || 'your area'}?`)) {
-                          alert('🚨 SOS triggered! Location shared with emergency services and contacts.');
+                          toast.warning('SOS Triggered', {
+                            description: '🚨 SOS triggered! Location shared with emergency services and contacts.'
+                          });
                         }
                       }}
                     >

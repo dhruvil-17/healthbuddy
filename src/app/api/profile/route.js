@@ -58,8 +58,21 @@ export async function POST(request) {
       gender: profileData.gender || null,
       location: profileData.location?.trim() || null,
       preferred_language: profileData.preferred_language || profileData.language || 'English',
-      emergency_contact_name: profileData.emergency_contact_name?.trim() || profileData.emergencyContactName?.trim() || null,
-      emergency_contact_phone: profileData.emergency_contact_phone?.trim() || profileData.emergencyContactPhone?.trim() || null,
+      emergency_contacts: Array.isArray(profileData.emergency_contacts) 
+        ? profileData.emergency_contacts.filter(contact => 
+            contact.name?.trim() && contact.phone?.trim() && /^\d{10}$/.test(contact.phone.replace(/\s/g, ''))
+          ).map(contact => ({
+            name: contact.name.trim(),
+            phone: contact.phone.replace(/\s/g, '')
+          }))
+        : [],
+      // Legacy support for single emergency contact fields
+      emergency_contact_name: Array.isArray(profileData.emergency_contacts) && profileData.emergency_contacts.length > 0
+        ? profileData.emergency_contacts[0].name
+        : profileData.emergency_contact_name?.trim() || null,
+      emergency_contact_phone: Array.isArray(profileData.emergency_contacts) && profileData.emergency_contacts.length > 0
+        ? profileData.emergency_contacts[0].phone
+        : profileData.emergency_contact_phone?.trim() || null,
       existing_conditions: Array.isArray(profileData.existing_conditions || profileData.conditions) 
         ? (profileData.existing_conditions || profileData.conditions) 
         : [],

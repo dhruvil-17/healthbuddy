@@ -26,24 +26,30 @@ export const ProfileEditPage = ({ initialProfile, onSave, onCancel }) => {
     age: '',
     gender: '',
     preferred_language: 'English',
-    emergency_contact_name: '',
-    emergency_contact_phone: '',
+    emergency_contacts: [],
     location: '',
     existing_conditions: []
   });
   
   const [newCondition, setNewCondition] = useState('');
+  const [newContact, setNewContact] = useState({ name: '', phone: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (initialProfile) {
+      // Handle migration from single contact to multiple contacts
+      const emergencyContacts = initialProfile.emergency_contacts || 
+        (initialProfile.emergency_contact_name ? [{
+          name: initialProfile.emergency_contact_name,
+          phone: initialProfile.emergency_contact_phone || ''
+        }] : []);
+      
       setProfile({
         age: initialProfile.age?.toString() || '',
         gender: initialProfile.gender || '',
         preferred_language: initialProfile.preferred_language || 'English',
-        emergency_contact_name: initialProfile.emergency_contact_name || '',
-        emergency_contact_phone: initialProfile.emergency_contact_phone || '',
+        emergency_contacts: emergencyContacts,
         location: initialProfile.location || '',
         existing_conditions: initialProfile.existing_conditions || []
       });
@@ -55,9 +61,14 @@ export const ProfileEditPage = ({ initialProfile, onSave, onCancel }) => {
     if (!profile.age || profile.age < 1 || profile.age > 150) newErrors.age = 'Invalid age (1-150)';
     if (!profile.gender) newErrors.gender = 'Gender is required';
     if (!profile.preferred_language) newErrors.preferred_language = 'Language is required';
-    if (profile.emergency_contact_phone && !/^\d{10}$/.test(profile.emergency_contact_phone.replace(/\s/g, ''))) {
-      newErrors.emergency_contact_phone = 'Invalid 10-digit phone number';
-    }
+    
+    // Validate emergency contacts
+    profile.emergency_contacts.forEach((contact, index) => {
+      if (contact.phone && !/^\d{10}$/.test(contact.phone.replace(/\s/g, ''))) {
+        newErrors[`emergency_contact_${index}_phone`] = 'Invalid 10-digit phone number';
+      }
+    });
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -91,12 +102,35 @@ export const ProfileEditPage = ({ initialProfile, onSave, onCancel }) => {
     }));
   };
 
+  const addEmergencyContact = () => {
+    if (newContact.name.trim() && newContact.phone.trim()) {
+      const cleanPhone = newContact.phone.replace(/\s/g, '');
+      if (/^\d{10}$/.test(cleanPhone)) {
+        setProfile(prev => ({
+          ...prev,
+          emergency_contacts: [...prev.emergency_contacts, {
+            name: newContact.name.trim(),
+            phone: cleanPhone
+          }]
+        }));
+        setNewContact({ name: '', phone: '' });
+      }
+    }
+  };
+
+  const removeEmergencyContact = (index) => {
+    setProfile(prev => ({
+      ...prev,
+      emergency_contacts: prev.emergency_contacts.filter((_, i) => i !== index)
+    }));
+  };
+
   return (
     <div className="space-y-10 pb-20">
       {/* Header Banner */}
       <section className="relative overflow-hidden rounded-3xl bg-linear-to-br from-primary-600 to-indigo-700 p-8 sm:p-12 text-white shadow-2xl shadow-primary-500/20">
-        <div className="relative z-10 space-y-4 max-w-2xl flex items-center space-x-8">
-           <Avatar name={initialProfile?.full_name} size="xl" className="hidden md:flex border-4 border-white/20" />
+        <div className="relative z-10 space-y-4 max-w-2xl flex flex-col md:flex-row items-center space-x-8">
+           {/* <Avatar name={initialProfile?.full_name} size="xl" className="hidden md:flex border-4 border-white/20" /> */}
            <div className="space-y-3">
               <Badge variant="glass" className="bg-white/20 border-white/30 text-white">
                 <Shield className="h-3.5 w-3.5 mr-2" />
@@ -135,7 +169,7 @@ export const ProfileEditPage = ({ initialProfile, onSave, onCancel }) => {
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700 ml-1">Gender</label>
                 <select 
-                  className="w-full bg-white/70 backdrop-blur-sm border border-gray-200 rounded-xl py-3 px-4 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all duration-300 font-medium h-[52px]"
+                  className="w-full bg-white/70 backdrop-blur-sm border border-gray-200 rounded-xl py-3 px-4 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all duration-300 font-medium h-13"
                   value={profile.gender}
                   onChange={(e) => setProfile({...profile, gender: e.target.value})}
                 >
@@ -150,7 +184,7 @@ export const ProfileEditPage = ({ initialProfile, onSave, onCancel }) => {
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700 ml-1">Preferred Language</label>
                 <select 
-                  className="w-full bg-white/70 backdrop-blur-sm border border-gray-200 rounded-xl py-3 px-4 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all duration-300 font-medium h-[52px]"
+                  className="w-full bg-white/70 backdrop-blur-sm border border-gray-200 rounded-xl py-3 px-4 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all duration-300 font-medium h-13"
                   value={profile.preferred_language}
                   onChange={(e) => setProfile({...profile, preferred_language: e.target.value})}
                 >
@@ -174,24 +208,64 @@ export const ProfileEditPage = ({ initialProfile, onSave, onCancel }) => {
           <GlassCard className="p-10 border-transparent shadow-xl ring-1 ring-gray-100">
             <h2 className="text-2xl font-extrabold text-gray-900 mb-8 flex items-center">
               <Phone className="h-6 w-6 mr-3 text-red-500" />
-              Emergency Contact
+              Emergency Contacts
             </h2>
-            <div className="grid sm:grid-cols-2 gap-8">
-              <Input 
-                label="Full Name" 
-                value={profile.emergency_contact_name} 
-                onChange={(e) => setProfile({...profile, emergency_contact_name: e.target.value})}
-                placeholder="Contact person's name"
-                icon={User}
-              />
-              <Input 
-                label="Phone Number" 
-                value={profile.emergency_contact_phone} 
-                onChange={(e) => setProfile({...profile, emergency_contact_phone: e.target.value})}
-                error={errors.emergency_contact_phone}
-                placeholder="10-digit number"
-                icon={Phone}
-              />
+            
+            {/* Add New Contact Form */}
+            <div className="mb-6 p-6 bg-red-50 rounded-2xl border border-red-100">
+              <h3 className="text-lg font-bold text-red-900 mb-4">Add New Contact</h3>
+              <div className="grid sm:grid-cols-2 gap-4 mb-4">
+                <Input 
+                  label="Full Name" 
+                  value={newContact.name} 
+                  onChange={(e) => setNewContact({...newContact, name: e.target.value})}
+                  placeholder="Contact person's name"
+                  icon={User}
+                />
+                <Input 
+                  label="Phone Number" 
+                  value={newContact.phone} 
+                  onChange={(e) => setNewContact({...newContact, phone: e.target.value})}
+                  placeholder="10-digit number"
+                  icon={Phone}
+                />
+              </div>
+              <Button 
+                onClick={addEmergencyContact} 
+                className="w-full sm:w-auto"
+                leftIcon={Plus}
+                disabled={!newContact.name.trim() || !newContact.phone.trim()}
+              >
+                Add Contact
+              </Button>
+            </div>
+            
+            {/* Existing Contacts */}
+            <div className="space-y-4">
+              {profile.emergency_contacts.map((contact, index) => (
+                <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-200">
+                  <div className="flex items-center space-x-4">
+                    <Avatar name={contact.name} size="sm" className="border-2 border-red-200" />
+                    <div>
+                      <p className="font-bold text-gray-900">{contact.name}</p>
+                      <p className="text-sm text-gray-600">{contact.phone}</p>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="danger" 
+                    size="sm"
+                    onClick={() => removeEmergencyContact(index)}
+                    leftIcon={X}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ))}
+              {profile.emergency_contacts.length === 0 && (
+                <p className="text-sm font-bold text-gray-400 uppercase tracking-widest text-center py-8 italic">
+                  No emergency contacts added. Add at least one contact for safety.
+                </p>
+              )}
             </div>
           </GlassCard>
         </div>
@@ -212,7 +286,7 @@ export const ProfileEditPage = ({ initialProfile, onSave, onCancel }) => {
                 className="flex-1"
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCondition())}
               />
-              <Button onClick={addCondition} className="h-[52px] shrink-0   " leftIcon={Plus} />
+              <Button onClick={addCondition} className="h-13 shrink-0" leftIcon={Plus} />
             </div>
 
             <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">

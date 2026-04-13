@@ -23,6 +23,7 @@ import {
   Lightbulb
 } from 'lucide-react';
 import { useProtectedProfile } from '@/hooks/useProtectedProfile';
+import { toast } from "sonner";
 import Button from '@/components/ui/Button';
 import GlassCard from '@/components/ui/GlassCard';
 import Badge from '@/components/ui/Badge';
@@ -282,7 +283,9 @@ export default function HealthTips() {
                            variant="danger" 
                            className="bg-white text-red-900 hover:bg-red-50 px-6 h-12 rounded-xl font-extrabold"
                            onClick={() => {
-                             alert('🚨 EMERGENCY SOS ACTIVATED! Signal sent to contacts + authorities.');
+                             toast.warning('Emergency SOS', {
+                               description: '🚨 EMERGENCY SOS ACTIVATED! Signal sent to contacts + authorities.'
+                             });
                              router.push('/dashboard');
                            }}
                          >
