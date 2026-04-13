@@ -80,7 +80,7 @@ export default function LandingPage() {
         <div className="flex items-center space-x-4">
           {isAuthenticated ? (
             <Link href="/dashboard">
-              <Button rightIcon={ArrowRight}>Go to Dashboard</Button>
+              <Button>Dashboard</Button>
             </Link>
           ) : (
             <>
