@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { 
+  AlertTriangle,
   Heart, 
   Shield, 
   Users, 
@@ -215,40 +216,46 @@ useEffect(() => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-white py-20 px-6 sm:px-12">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-12">
-          <div className="col-span-2 space-y-6">
-            <div className="flex items-center space-x-3">
-              <div className="bg-primary-600 p-2 rounded-xl">
-                <Heart className="h-6 w-6" />
+      <footer className="bg-slate-900 text-white py-12 px-6 sm:px-12">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 mb-8">
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <div className="bg-primary-600 p-2 rounded-lg">
+                  <Heart className="h-5 w-5" />
+                </div>
+                <span className="text-xl font-bold italic tracking-tight">HealthBuddy</span>
               </div>
-              <span className="text-2xl font-bold italic tracking-tight">HealthBuddy</span>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                Making professional healthcare accessible and affordable for underserved communities worldwide through the power of AI.
+              </p>
             </div>
-            <p className="text-slate-400 max-w-sm leading-relaxed">
-              Making professional healthcare accessible and affordable for underserved communities worldwide through the power of AI.
+            <div>
+              <h4 className="font-bold text-sm mb-4 uppercase tracking-wider text-slate-300">Platform</h4>
+              <ul className="space-y-2 text-slate-400 text-sm">
+                <li><Link href="/symptom-checker" className="hover:text-white transition-colors">Symptom Checker</Link></li>
+                <li><Link href="/find-facility" className="hover:text-white transition-colors">Facility Finder</Link></li>
+                <li><Link href="/reminders" className="hover:text-white transition-colors">Medication Tracker</Link></li>
+                <li><Link href="/health-tips" className="hover:text-white transition-colors">Health Tips</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-bold text-sm mb-4 uppercase tracking-wider text-slate-300">Legal</h4>
+              <ul className="space-y-2 text-slate-400 text-sm">
+                <li><Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/terms-of-service" className="hover:text-white transition-colors">Terms of Service</Link></li>
+                <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-slate-800 pt-6 space-y-4">
+            <p className="text-slate-500 text-xs leading-relaxed text-center">
+              <strong className="text-slate-400">Medical Disclaimer:</strong> HealthBuddy is an AI-powered tool designed for informational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition. If you think you may have a medical emergency, call your doctor or emergency services immediately.
+            </p>
+            <p className="text-slate-500 text-xs text-center">
+              © 2026 HealthBuddy AI Technologies. All rights reserved.
             </p>
           </div>
-          <div>
-            <h4 className="font-bold text-lg mb-6">Platform</h4>
-            <ul className="space-y-4 text-slate-400 font-medium">
-              <li><Link href="#" className="hover:text-white transition-colors">Symptom Checker</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Facility Finder</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Medication Tracker</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Health Tips</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-bold text-lg mb-6">Company</h4>
-            <ul className="space-y-4 text-slate-400 font-medium">
-              <li><Link href="#" className="hover:text-white transition-colors">About Us</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Terms of Service</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Contact Support</Link></li>
-            </ul>
-          </div>
-        </div>
-        <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-slate-800 text-center text-slate-500 text-sm font-bold">
-          © 2024 HealthBuddy AI Technologies. All rights reserved.
         </div>
       </footer>
     </div>
