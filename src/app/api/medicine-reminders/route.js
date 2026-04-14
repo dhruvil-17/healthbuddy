@@ -84,7 +84,7 @@ export async function POST(request) {
           frequency: frequency,
           times: times,
           start_date: startDate,
-          end_date: endDate || null,
+          end_date: endDate || null, // Convert empty string to null
           notes: notes || null
         }
       ])
@@ -110,7 +110,7 @@ export async function POST(request) {
 export async function PUT(request) {
   try {
     const user = await getSessionUser()
-    
+
     if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -118,17 +118,20 @@ export async function PUT(request) {
       )
     }
 
-    const { 
-      reminderId, 
-      medicineName, 
-      dosage, 
-      frequency, 
-      times, 
-      startDate, 
-      endDate, 
+    const body = await request.json()
+    console.log('PUT request body:', body)
+
+    const {
+      reminderId,
+      medicineName,
+      dosage,
+      frequency,
+      times,
+      startDate,
+      endDate,
       notes,
       isActive
-    } = await request.json()
+    } = body
 
     if (!reminderId) {
       return NextResponse.json(
@@ -145,10 +148,13 @@ export async function PUT(request) {
     if (frequency !== undefined) updateData.frequency = frequency
     if (times !== undefined) updateData.times = times
     if (startDate !== undefined) updateData.start_date = startDate
-    if (endDate !== undefined) updateData.end_date = endDate
+    if (endDate !== undefined) updateData.end_date = endDate || null // Convert empty string to null
     if (notes !== undefined) updateData.notes = notes
     if (isActive !== undefined) updateData.is_active = isActive
     updateData.updated_at = new Date().toISOString()
+
+    console.log('Update data:', updateData)
+    console.log('Updating reminder with ID:', reminderId, 'for user:', user.id)
 
     const { data: reminder, error } = await supabase
       .from('medicine_reminders')
@@ -158,7 +164,12 @@ export async function PUT(request) {
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('Supabase update error:', error)
+      throw error
+    }
+
+    console.log('Update successful:', reminder)
 
     return NextResponse.json({
       success: true,
@@ -166,8 +177,9 @@ export async function PUT(request) {
     })
 
   } catch (error) {
+    console.error('PUT request error:', error)
     return NextResponse.json(
-      { error: 'Failed to update reminder' },
+      { error: error.message || 'Failed to update reminder' },
       { status: 500 }
     )
   }

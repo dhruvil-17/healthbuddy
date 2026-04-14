@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import {
   Pill,
@@ -44,7 +45,7 @@ export default function MedicineRemindersPage() {
   const [reminderToDelete, setReminderToDelete] = useState(null);
   const router = useRouter();
   const { user, loading: autLoading } = useProtectedUser();
-
+  const [todayLogs , setTodayLogs] = useState([])
   const [formData, setFormData] = useState({
     medicineName: '',
     dosage: '',
@@ -117,23 +118,41 @@ export default function MedicineRemindersPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user) return;
+
+    console.log('handleSubmit called with:', { formData, editingReminder });
+
     try {
       const method = editingReminder ? 'PUT' : 'POST';
       const payload = { ...formData, userId: user.id };
       if (editingReminder) payload.reminderId = editingReminder.id;
-      
+
+      console.log('Sending request:', { method, payload });
+
       const response = await fetch('/api/medicine-reminders', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       const data = await response.json();
+
+      console.log('API response:', data);
+
       if (data.success) {
         await loadData(user.id);
         resetForm();
+        toast.success(editingReminder ? 'Reminder Updated' : 'Reminder Created', {
+          description: editingReminder ? 'Medicine schedule updated successfully.' : 'Medicine schedule created successfully.'
+        });
+      } else {
+        toast.error('Save Failed', {
+          description: data.error || 'Failed to save reminder. Please try again.'
+        });
       }
     } catch (error) {
-      // Error saving reminder - will show error toast
+      console.error('Error saving reminder:', error);
+      toast.error('Save Failed', {
+        description: 'Failed to save reminder. Please try again.'
+      });
     }
   };
 
@@ -153,6 +172,8 @@ export default function MedicineRemindersPage() {
 
   const updateMedicineStatus = async (item, status) => {
     if (!user) return;
+
+    console.log('updateMedicineStatus called with:', { item, status });
 
     // Optimistic UI update - update immediately before API call
     const previousLogs = [...todayLogs];
@@ -177,14 +198,23 @@ export default function MedicineRemindersPage() {
         })
       });
 
+      const data = await response.json();
+      console.log('API response:', data);
+
       if (!response.ok) {
+        console.error('API call failed:', data);
         // Revert optimistic update if API call fails
         setTodayLogs(previousLogs);
         toast.error('Update Failed', {
-          description: 'Failed to update medicine status. Please try again.'
+          description: data.error || 'Failed to update medicine status. Please try again.'
         });
+      } else {
+        console.log('Status updated successfully');
+        // Reload data to ensure persistence
+        await loadData(user.id);
       }
     } catch (error) {
+      console.error('Error updating medicine status:', error);
       // Revert optimistic update if error occurs
       setTodayLogs(previousLogs);
       toast.error('Update Failed', {
