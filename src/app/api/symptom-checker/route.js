@@ -84,20 +84,24 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit')) || 10
+    const offset = parseInt(searchParams.get('offset')) || 0
     const supabase = await createClient()
 
-    const { data: checks, error } = await supabase
+    const { data: checks, error, count } = await supabase
       .from('symptom_checks')
-      .select('*')
+      .select('*', { count: 'exact' })
       .eq('user_id', user.id) // Session-based restricted access
       .order('timestamp', { ascending: false })
-      .limit(limit)
+      .range(offset, offset + limit - 1)
 
     if (error) throw error
 
     return NextResponse.json({
       success: true,
-      data: checks
+      data: checks || [],
+      count: checks?.length || 0,
+      total: count || 0,
+      hasMore: offset + limit < (count || 0)
     })
 
   } catch (error) {

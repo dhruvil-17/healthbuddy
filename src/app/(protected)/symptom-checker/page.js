@@ -34,25 +34,123 @@ export default function SymptomCheckerPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState(null);
   const [history, setHistory] = useState([]);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const historyScrollRef = React.useRef(null);
+  const isScrollingRef = React.useRef(false);
+  const scrollTimeoutRef = React.useRef(null);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-  const fetchHistory = React.useCallback(async () => {
+  const fetchHistory = React.useCallback(async (reset = true) => {
     if (!user) return;
+    
+    if (reset) {
+      setPage(0);
+      setHistory([]);
+    } else {
+      setLoadingMore(true);
+    }
+
     try {
-      const response = await fetch(`/api/symptom-checker?userId=${user.id}&limit=5`);
+      const currentPage = reset ? 0 : page;
+      const params = new URLSearchParams({
+        limit: '5',
+        offset: (currentPage * 5).toString(),
+      });
+      const response = await fetch(`/api/symptom-checker?${params}`);
       const data = await response.json();
       if (data.success) {
-        setHistory(data.data);
+        if (reset) {
+          setHistory(data.data);
+          setHasMore(data.hasMore);
+        } else {
+          setHistory(prev => [...prev, ...data.data]);
+          setHasMore(data.hasMore);
+          setPage(currentPage + 1);
+        }
       }
     } catch (error) {
       // Error fetching history - will show empty state
+    } finally {
+      if (!reset) {
+        setLoadingMore(false);
+      }
     }
-  }, [user]);
+  }, [user, page]);
 
   useEffect(() => {
-    fetchHistory();
-  }, [fetchHistory]);
+    fetchHistory(true);
+  }, [user]);
+
+  const loadMore = React.useCallback(() => {
+    if (!loadingMore && hasMore && user && !isScrollingRef.current) {
+      isScrollingRef.current = true;
+      fetchHistory(false);
+    }
+  }, [loadingMore, hasMore, user, fetchHistory]);
+
+  // Scroll detection on the history container
+  useEffect(() => {
+    const container = historyScrollRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      
+      // Don't trigger if we just programmatically scrolled
+      if (container.dataset.isProgrammaticScroll === 'true') {
+        return;
+      }
+      
+      // Trigger loadMore when scrolled to 90% of the container
+      if (scrollTop + clientHeight >= scrollHeight * 0.9 && !loadingMore && hasMore && !isScrollingRef.current) {
+        // Clear any existing timeout
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
+        
+        // Debounce the loadMore call
+        scrollTimeoutRef.current = setTimeout(() => {
+          loadMore();
+        }, 500);
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, [loadingMore, hasMore, loadMore]);
+
+  // Scroll to bottom after loading more content
+  useEffect(() => {
+    const container = historyScrollRef.current;
+    if (!container || !isScrollingRef.current) return;
+
+    // Only run when loadingMore transitions from true to false
+    if (!loadingMore && isScrollingRef.current) {
+      requestAnimationFrame(() => {
+        if (container) {
+          // Mark as programmatic scroll to prevent triggering loadMore again
+          container.dataset.isProgrammaticScroll = 'true';
+          container.scrollTop = container.scrollHeight;
+          isScrollingRef.current = false;
+          
+          // Reset the flag after a short delay
+          setTimeout(() => {
+            if (container) {
+              delete container.dataset.isProgrammaticScroll;
+            }
+          }, 100);
+        }
+      });
+    }
+  }, [loadingMore]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -249,23 +347,39 @@ export default function SymptomCheckerPage() {
         {/* Sidebar: History & Tips */}
         <div className="space-y-10">
           <h2 className="text-2xl font-extrabold text-gray-900 px-2">History</h2>
-          <div className="space-y-6">
+          <div ref={historyScrollRef} className="h-[500px] overflow-y-auto pr-2 space-y-6">
             {history.length > 0 ? (
-              history.map((check, i) => {
-                const checkDate = new Date(check.timestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-                return (
-                  <GlassCard key={i} className="p-6 border-transparent bg-gray-50/50 hover:bg-white group cursor-pointer transition-all duration-300" onClick={() => handleViewDetails(check)}>
-                    <div className="flex items-center justify-between mb-3">
-                      <Badge variant={getSeverityVariant(check.severity_level)} className="text-[10px] px-2.5">{check.severity_level}</Badge>
-                      <span className="text-[10px] font-bold text-gray-400 uppercase">{checkDate}</span>
-                    </div>
-                    <p className="text-sm font-bold text-gray-700 line-clamp-2 italic mb-3">&quot;{check.symptoms_description}&quot;</p>
-                    <div className="flex items-center text-primary-500 text-[11px] font-extrabold uppercase tracking-widest group-hover:translate-x-1 transition-transform">
-                      VIEW DETAILS <ChevronRight className="h-3.5 w-3.5 ml-1" />
-                    </div>
-                  </GlassCard>
-                );
-              })
+              <>
+                {history.map((check, i) => {
+                  const checkDate = new Date(check.timestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+                  return (
+                    <GlassCard key={i} className="p-6 border-transparent bg-gray-50/50 hover:bg-white group cursor-pointer transition-all duration-300" onClick={() => handleViewDetails(check)}>
+                      <div className="flex items-center justify-between mb-3">
+                        <Badge variant={getSeverityVariant(check.severity_level)} className="text-[10px] px-2.5">{check.severity_level}</Badge>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase">{checkDate}</span>
+                      </div>
+                      <p className="text-sm font-bold text-gray-700 line-clamp-2 italic mb-3">&quot;{check.symptoms_description}&quot;</p>
+                      <div className="flex items-center text-primary-500 text-[11px] font-extrabold uppercase tracking-widest group-hover:translate-x-1 transition-transform">
+                        VIEW DETAILS <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                      </div>
+                    </GlassCard>
+                  );
+                })}
+                
+                {/* Loading Indicator */}
+                {loadingMore && (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin text-primary-600 mr-2" />
+                    <span className="text-xs font-bold text-gray-500">Loading more...</span>
+                  </div>
+                )}
+
+                {!hasMore && history.length > 0 && (
+                  <div className="text-center py-2">
+                    <p className="text-xs font-bold text-gray-400">Showing all {history.length} reports</p>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="p-10 text-center space-y-4">
                 <div className="p-4 bg-gray-50 rounded-3xl inline-block mx-auto">
