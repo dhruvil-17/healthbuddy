@@ -176,14 +176,14 @@ export default function MedicineRemindersPage() {
     console.log('updateMedicineStatus called with:', { item, status });
 
     // Optimistic UI update - update immediately before API call
-    const previousLogs = [...todayLogs];
-    const updatedLogs = todayLogs.map(log => {
+    const previousLogs = [...todaysSchedule];
+    const updatedLogs = todaysSchedule.map(log => {
       if (log.scheduledTime === item.scheduledTime && log.reminder.id === item.reminder.id) {
         return { ...log, status };
       }
       return log;
     });
-    setTodayLogs(updatedLogs);
+    setTodaysSchedule(updatedLogs);
 
     try {
       const response = await fetch('/api/medicine-logs', {
@@ -204,7 +204,7 @@ export default function MedicineRemindersPage() {
       if (!response.ok) {
         console.error('API call failed:', data);
         // Revert optimistic update if API call fails
-        setTodayLogs(previousLogs);
+        setTodaysSchedule(previousLogs);
         toast.error('Update Failed', {
           description: data.error || 'Failed to update medicine status. Please try again.'
         });
