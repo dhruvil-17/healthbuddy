@@ -37,6 +37,7 @@ import FacilityMap from "@/components/ui/Map";
 export default function FacilityFinderPage() {
   const [facilities, setFacilities] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [selectedCity, setSelectedCity] = useState("");
   const [facilityType, setFacilityType] = useState("all");
   const [radius, setRadius] = useState(10);
@@ -46,6 +47,11 @@ export default function FacilityFinderPage() {
   const [userLocation, setUserLocation] = useState(null);
   const [selectedFacility, setSelectedFacility] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const scrollContainerRef = React.useRef(null);
+  const isScrollingRef = React.useRef(false);
+  const scrollTimeoutRef = React.useRef(null);
   const router = useRouter();
   const { user, loading: autLoading } = useProtectedUser();
 
@@ -80,24 +86,58 @@ export default function FacilityFinderPage() {
     facility.type.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const searchFacilities = React.useCallback(async () => {
+  const searchFacilities = React.useCallback(async (reset = true) => {
     if (!selectedCity || !user?.id) return;
-    setLoading(true);
+    
+    if (reset) {
+      setLoading(true);
+      setPage(0);
+      setFacilities([]);
+    } else {
+      setLoadingMore(true);
+    }
+
     try {
+      const currentPage = reset ? 0 : page;
       const params = new URLSearchParams({
         city: selectedCity,
         type: facilityType,
         radius: radius.toString(),
+        limit: '10',
+        offset: (currentPage * 10).toString(),
       });
       const response = await fetch(`/api/find-facility?${params}`);
       const data = await response.json();
-      if (data.success) setFacilities(data.data);
+      if (data.success) {
+        if (reset) {
+          setFacilities(data.data);
+        } else {
+          setFacilities(prev => {
+            const existingIds = new Set(prev.map(f => f.id));
+            const newFacilities = data.data.filter(f => !existingIds.has(f.id));
+            return [...prev, ...newFacilities];
+          });
+        }
+        setHasMore(data.hasMore);
+        if (!reset) setPage(currentPage + 1);
+      }
     } catch (error) {
       // Error searching facilities - will show error toast
     } finally {
-      setLoading(false);
+      if (reset) {
+        setLoading(false);
+      } else {
+        setLoadingMore(false);
+      }
     }
-  }, [user?.id, selectedCity, facilityType, radius]);
+  }, [user?.id, selectedCity, facilityType, radius, page]);
+
+  const loadMore = React.useCallback(() => {
+    if (!loadingMore && hasMore && selectedCity && !isScrollingRef.current) {
+      isScrollingRef.current = true;
+      searchFacilities(false);
+    }
+  }, [loadingMore, hasMore, selectedCity, searchFacilities]);
 
   const handleShareLocation = () => {
     if (!navigator.geolocation) {
@@ -176,8 +216,69 @@ export default function FacilityFinderPage() {
   };
 
   useEffect(() => {
-    if (selectedCity) searchFacilities();
-  }, [selectedCity, searchFacilities]);
+    if (selectedCity) searchFacilities(true);
+  }, [selectedCity, facilityType, radius]);
+
+  // Scroll detection on the scrollable container
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      
+      // Don't trigger if we just programmatically scrolled
+      if (container.dataset.isProgrammaticScroll === 'true') {
+        return;
+      }
+      
+      // Trigger loadMore when scrolled to 90% of the container (increased from 80%)
+      if (scrollTop + clientHeight >= scrollHeight * 0.9 && !loading && !loadingMore && hasMore && !isScrollingRef.current) {
+        // Clear any existing timeout
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
+        
+        // Debounce the loadMore call with longer delay (increased from 300ms to 500ms)
+        scrollTimeoutRef.current = setTimeout(() => {
+          loadMore();
+        }, 500);
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, [loading, loadingMore, hasMore, loadMore]);
+
+  // Scroll to bottom after loading more content
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !isScrollingRef.current) return;
+
+    // Only run when loadingMore transitions from true to false
+    if (!loadingMore && isScrollingRef.current) {
+      requestAnimationFrame(() => {
+        if (container) {
+          // Mark as programmatic scroll to prevent triggering loadMore again
+          container.dataset.isProgrammaticScroll = 'true';
+          container.scrollTop = container.scrollHeight;
+          isScrollingRef.current = false;
+          
+          // Reset the flag after a short delay
+          setTimeout(() => {
+            if (container) {
+              delete container.dataset.isProgrammaticScroll;
+            }
+          }, 100);
+        }
+      });
+    }
+  }, [loadingMore]);
 
   const getFacilityIcon = (type) => {
     const typeData = facilityTypes.find((t) => t.value === type);
@@ -378,7 +479,8 @@ export default function FacilityFinderPage() {
 
                {/* List View */}
                {viewMode === 'list' && (
-                 <div className="grid md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                 <div ref={scrollContainerRef} className="h-[700px] overflow-y-auto pr-2 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                   <div className="grid md:grid-cols-2 gap-8">
                    {filteredFacilities.map((f, i) => {
                      const Icon = getFacilityIcon(f.type);
                      return (
@@ -439,6 +541,21 @@ export default function FacilityFinderPage() {
                        </GlassCard>
                      );
                    })}
+                   </div>
+                   
+                   {/* Loading Indicator */}
+                   {loadingMore && (
+                     <div className="flex items-center justify-center py-8">
+                       <Loader2 className="h-6 w-6 animate-spin text-primary-600 mr-2" />
+                       <span className="text-sm font-bold text-gray-500">Loading more facilities...</span>
+                     </div>
+                   )}
+
+                   {!hasMore && filteredFacilities.length > 0 && (
+                     <div className="text-center py-4">
+                       <p className="text-sm font-bold text-gray-400">Showing all {filteredFacilities.length} facilities</p>
+                     </div>
+                   )}
                  </div>
                )}
              </>

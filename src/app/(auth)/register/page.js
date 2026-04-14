@@ -203,7 +203,7 @@ export default function RegisterPage() {
                 isLoading={loading}
                 rightIcon={loading ? null : Sparkles}
               >
-                {loading ? 'Securing Profile...' : 'Begin My Journey'}
+                {loading ? 'Securing Profile...' : 'Create My Free Account'}
               </Button>
             </div>
           </form>

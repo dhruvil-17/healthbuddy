@@ -16,6 +16,8 @@ export async function GET(request) {
     const city = searchParams.get('city')
     const facilityType = searchParams.get('type') || 'all'
     const radius = parseInt(searchParams.get('radius')) || 10
+    const limit = parseInt(searchParams.get('limit')) || 10
+    const offset = parseInt(searchParams.get('offset')) || 0
     const supabase = await createClient()
 
     if (!city) {
@@ -25,7 +27,7 @@ export async function GET(request) {
       )
     }
 
-    let query = supabase.from('healthcare_facilities').select('*')
+    let query = supabase.from('healthcare_facilities').select('*', { count: 'exact' })
 
     // Filter by city (exact match for better results)
     query = query.eq('city', city)
@@ -35,7 +37,9 @@ export async function GET(request) {
       query = query.eq('type', facilityType)
     }
 
-    const { data: facilities, error } = await query.order('name')
+    const { data: facilities, error, count } = await query
+      .order('name')
+      .range(offset, offset + limit - 1)
 
     if (error) throw error
 
@@ -71,6 +75,8 @@ export async function GET(request) {
       success: true,
       data: results,
       count: results.length,
+      total: count || 0,
+      hasMore: offset + limit < (count || 0),
       city: city
     })
 
