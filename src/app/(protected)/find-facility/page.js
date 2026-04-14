@@ -32,6 +32,7 @@ import { ConfirmModal } from "@/components/ui/Modal";
 import Badge from "@/components/ui/Badge";
 import Input from "@/components/ui/Input";
 import Skeleton from "@/components/ui/Skeleton";
+import FacilityMap from "@/components/ui/Map";
 
 export default function FacilityFinderPage() {
   const [facilities, setFacilities] = useState([]);
@@ -41,21 +42,26 @@ export default function FacilityFinderPage() {
   const [radius, setRadius] = useState(10);
   const [showSOSModal, setShowSOSModal] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
+  const [viewMode, setViewMode] = useState('list'); // 'list' or 'map'
+  const [userLocation, setUserLocation] = useState(null);
+  const [selectedFacility, setSelectedFacility] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
   const { user, loading: autLoading } = useProtectedUser();
 
   const availableCities = [
-    { value: "", label: "Select a city" },
-    { value: "Mumbai", label: "Mumbai, Maharashtra" },
-    { value: "Delhi", label: "Delhi" },
-    { value: "Bangalore", label: "Bangalore, Karnataka" },
-    { value: "Chennai", label: "Chennai, Tamil Nadu" },
-    { value: "Kolkata", label: "Kolkata, West Bengal" },
-    { value: "Hyderabad", label: "Hyderabad, Telangana" },
-    { value: "Pune", label: "Pune, Maharashtra" },
-    { value: "Ahmedabad", label: "Ahmedabad, Gujarat" },
-    { value: "Surat", label: "Surat, Gujarat" },
-    { value: "Jaipur", label: "Jaipur, Rajasthan" },
+    { value: "", label: "Select a city", lat: null, lng: null },
+    { value: "Mumbai", label: "Mumbai, Maharashtra", lat: 19.0760, lng: 72.8777 },
+    { value: "Delhi", label: "Delhi", lat: 28.7041, lng: 77.1025 },
+    { value: "Bangalore", label: "Bangalore, Karnataka", lat: 12.9716, lng: 77.5946 },
+    { value: "Chennai", label: "Chennai, Tamil Nadu", lat: 13.0827, lng: 80.2707 },
+    { value: "Kolkata", label: "Kolkata, West Bengal", lat: 22.5726, lng: 88.3639 },
+    { value: "Hyderabad", label: "Hyderabad, Telangana", lat: 17.3850, lng: 78.4867 },
+    { value: "Pune", label: "Pune, Maharashtra", lat: 18.5204, lng: 73.8567 },
+    { value: "Ahmedabad", label: "Ahmedabad, Gujarat", lat: 23.0225, lng: 72.5714 },
+    { value: "Gandhinagar", label: "Gandhinagar, Gujarat", lat: 23.2156, lng: 72.6369 },
+    { value: "Surat", label: "Surat, Gujarat", lat: 21.1702, lng: 72.8311 },
+    { value: "Jaipur", label: "Jaipur, Rajasthan", lat: 26.9124, lng: 75.7873 },
   ];
 
   const facilityTypes = [
@@ -66,6 +72,13 @@ export default function FacilityFinderPage() {
     { value: "diagnostic_center", label: "Diagnostics", icon: Info },
     { value: "emergency", label: "Emergency", icon: AlertCircle },
   ];
+
+  // Filter facilities by search query
+  const filteredFacilities = facilities.filter(facility =>
+    facility.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    facility.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    facility.type.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const searchFacilities = React.useCallback(async () => {
     if (!selectedCity || !user?.id) return;
@@ -99,14 +112,51 @@ export default function FacilityFinderPage() {
       async (position) => {
         try {
           const { latitude, longitude } = position.coords;
-          // Use a simple reverse geocoding approach or just check if we are in a known city
-          // For now, let's just default to Mumbai if they shared location to demonstrate the flow
-          // in a real app, we'd use a geocoding service here.
-          // Since our backend is city-based, we'll try to find the nearest supported city.
-          setSelectedCity("Mumbai"); // Defaulting to Mumbai for demonstration
-          // searchFacilities is triggered by useEffect watching selectedCity
+          setUserLocation({ latitude, longitude });
+
+          // Calculate distance to each city using Haversine formula
+          const calculateDistance = (lat1, lon1, lat2, lon2) => {
+            const R = 6371; // Earth's radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a =
+              Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+          };
+
+          // Find nearest city
+          let nearestCity = null;
+          let minDistance = Infinity;
+
+          availableCities.forEach(city => {
+            if (city.lat && city.lng) {
+              const distance = calculateDistance(latitude, longitude, city.lat, city.lng);
+              if (distance < minDistance) {
+                minDistance = distance;
+                nearestCity = city;
+              }
+            }
+          });
+
+          if (nearestCity) {
+            setSelectedCity(nearestCity.value);
+            toast.success('Location Found', {
+              description: `Detected ${nearestCity.label}. Searching for nearby facilities.`
+            });
+          } else {
+            // Fallback to Mumbai if no city found
+            setSelectedCity("Mumbai");
+            toast.success('Location Found', {
+              description: 'Your location has been detected. Searching for nearby facilities.'
+            });
+          }
         } catch (error) {
-          // Error sharing location - will show error toast
+          toast.error('Location Error', {
+            description: 'Failed to process your location'
+          });
         } finally {
           setLocationLoading(false);
         }
@@ -118,6 +168,11 @@ export default function FacilityFinderPage() {
         });
       }
     );
+  };
+
+  const handleFacilityClick = (facility) => {
+    setSelectedFacility(facility);
+    setViewMode('list');
   };
 
   useEffect(() => {
@@ -132,6 +187,16 @@ export default function FacilityFinderPage() {
   const openDirections = (facility) => {
     const address = encodeURIComponent(`${facility.name}, ${facility.address}, ${facility.city}`);
     window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, "_blank");
+  };
+
+  const callFacility = (facility) => {
+    if (facility.phone) {
+      window.open(`tel:${facility.phone}`, "_self");
+    } else {
+      toast.error('No Phone Number', {
+        description: 'This facility does not have a phone number listed.'
+      });
+    }
   };
 
   if (autLoading) {
@@ -186,12 +251,26 @@ export default function FacilityFinderPage() {
         <div className="lg:col-span-1 space-y-8">
            <GlassCard className="p-8 border-transparent shadow-xl ring-1 ring-gray-100" hover={false}>
               <h3 className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-6 px-1">Search Parameters</h3>
-              
+
               <div className="space-y-6">
                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-700 ml-1">Search Facilities</label>
+                    <div className="relative">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search by name, address, or type..."
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3.5 pl-11 pr-4 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all font-medium h-[52px]"
+                      />
+                    </div>
+                 </div>
+
+                 <div className="space-y-2">
                     <label className="text-sm font-bold text-gray-700 ml-1">Current City</label>
-                    <select 
-                      value={selectedCity} 
+                    <select
+                      value={selectedCity}
                       onChange={e => setSelectedCity(e.target.value)}
                       className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3.5 px-4 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all font-medium h-[52px]"
                     >
@@ -262,59 +341,107 @@ export default function FacilityFinderPage() {
                 {[1,2,4,6].map(i => <Skeleton key={i} className="h-80 w-full rounded-[2.5rem]" />)}
              </div>
            ) : facilities.length > 0 ? (
-             <div className="grid md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-               {facilities.map((f, i) => {
-                 const Icon = getFacilityIcon(f.type);
-                 return (
-                   <GlassCard key={f.id} className="p-8 border-transparent shadow-xl ring-1 ring-gray-100 group">
-                      <div className="flex items-start justify-between mb-8">
-                         <div className="p-4 bg-indigo-50 text-indigo-600 rounded-2xl group-hover:scale-110 transition-transform duration-500 shadow-lg shadow-indigo-500/10">
-                            <Icon className="h-6 w-6" />
-                         </div>
-                         <div className="flex items-center space-x-1.5 bg-amber-50 text-amber-600 px-3 py-1.5 rounded-xl border border-amber-100">
-                            <Star className="h-4 w-4 fill-current" />
-                            <span className="font-extrabold text-sm">{f.rating}</span>
-                         </div>
-                      </div>
-                      
-                      <div className="space-y-4 mb-8">
-                         <div className="flex items-center space-x-2">
-                            <Badge variant="primary" className="py-1 px-3 text-[10px] uppercase font-extrabold tracking-widest bg-indigo-50 text-indigo-700 border-indigo-100">
-                               {f.type}
-                            </Badge>
-                            {f.emergency_services && <Badge variant="danger" className="py-1 px-3 text-[10px] uppercase font-extrabold tracking-widest italic animate-pulse">EMERGENCY</Badge>}
-                         </div>
-                         <h3 className="text-2xl font-bold text-gray-900 leading-tight group-hover:text-primary-600 transition-colors">
-                           {f.name}
-                         </h3>
-                         <div className="space-y-2">
-                           <div className="flex items-center text-gray-500 text-sm font-medium">
-                              <MapPin className="h-4 w-4 mr-2 text-primary-400" />
-                              <span className="line-clamp-1">{f.address}</span>
-                           </div>
-                           <div className="flex items-center text-gray-400 text-[10px] font-bold uppercase tracking-widest">
-                              <Clock className="h-3.5 w-3.5 mr-2 text-indigo-300" />
-                              <span>{f.distance ? `Distance: ${f.distance} KM away` : 'Verified nearby facility'}</span>
-                           </div>
-                         </div>
-                      </div>
+             <>
+               {/* View Toggle */}
+               <div className="flex items-center justify-between mb-6">
+                 <div className="flex items-center space-x-2 bg-gray-50 p-1 rounded-2xl border border-gray-100">
+                   <button
+                     onClick={() => setViewMode('list')}
+                     className={`flex items-center px-4 py-2 rounded-xl text-sm font-extrabold transition-all ${viewMode === 'list' ? 'bg-white text-primary-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                   >
+                     <Building className="h-4 w-4 mr-2" />
+                     List View
+                   </button>
+                   <button
+                     onClick={() => setViewMode('map')}
+                     className={`flex items-center px-4 py-2 rounded-xl text-sm font-extrabold transition-all ${viewMode === 'map' ? 'bg-white text-primary-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                   >
+                     <MapPin className="h-4 w-4 mr-2" />
+                     Map View
+                   </button>
+                 </div>
+                 <span className="text-sm font-bold text-gray-400">
+                   {filteredFacilities.length} facilities found
+                 </span>
+               </div>
 
-                      <div className="pt-6 border-t border-gray-50 flex items-center justify-between">
-                         <div className="flex -space-x-1.5">
-                            {[1, 2, 3].map(j => (
-                              <div key={j} className="h-7 w-7 rounded-lg border-2 border-white bg-slate-100 flex items-center justify-center">
-                                 <Plus className="h-3 w-3 text-slate-400" />
-                              </div>
-                            ))}
-                         </div>
-                         <Button variant="ghost" onClick={() => openDirections(f)} className="text-primary-600 font-bold uppercase tracking-widest text-[11px] hover:translate-x-1 transition-transform" rightIcon={ChevronRight}>
-                            NAVIGATE
-                         </Button>
-                      </div>
-                   </GlassCard>
-                 );
-               })}
-             </div>
+               {/* Map View */}
+               {viewMode === 'map' && (
+                 <div className="h-[600px] rounded-3xl overflow-hidden border-2 border-gray-100 shadow-xl">
+                   <FacilityMap
+                     userLocation={userLocation}
+                     facilities={filteredFacilities}
+                     onFacilityClick={handleFacilityClick}
+                   />
+                 </div>
+               )}
+
+               {/* List View */}
+               {viewMode === 'list' && (
+                 <div className="grid md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                   {filteredFacilities.map((f, i) => {
+                     const Icon = getFacilityIcon(f.type);
+                     return (
+                       <GlassCard key={f.id} className="p-8 border-transparent shadow-xl ring-1 ring-gray-100 group">
+                          <div className="flex items-start justify-between mb-8">
+                             <div className="p-4 bg-indigo-50 text-indigo-600 rounded-2xl group-hover:scale-110 transition-transform duration-500 shadow-lg shadow-indigo-500/10">
+                                <Icon className="h-6 w-6" />
+                             </div>
+                             <div className="flex items-center space-x-1.5 bg-amber-50 text-amber-600 px-3 py-1.5 rounded-xl border border-amber-100">
+                                <Star className="h-4 w-4 fill-current" />
+                                <span className="font-extrabold text-sm">{f.rating}</span>
+                             </div>
+                          </div>
+
+                          <div className="space-y-4 mb-8">
+                             <div className="flex items-center space-x-2">
+                                <Badge variant="primary" className="py-1 px-3 text-[10px] uppercase font-extrabold tracking-widest bg-indigo-50 text-indigo-700 border-indigo-100">
+                                   {f.type}
+                                </Badge>
+                                {f.emergency_services && <Badge variant="danger" className="py-1 px-3 text-[10px] uppercase font-extrabold tracking-widest italic animate-pulse">EMERGENCY</Badge>}
+                             </div>
+                             <h3 className="text-2xl font-bold text-gray-900 leading-tight group-hover:text-primary-600 transition-colors">
+                               {f.name}
+                             </h3>
+                             <div className="space-y-2">
+                               <div className="flex items-center text-gray-500 text-sm font-medium">
+                                  <MapPin className="h-4 w-4 mr-2 text-primary-400" />
+                                  <span className="line-clamp-1">{f.address}</span>
+                               </div>
+                               {f.phone && (
+                                 <div className="flex items-center text-gray-500 text-sm font-medium">
+                                    <Phone className="h-4 w-4 mr-2 text-emerald-400" />
+                                    <span>{f.phone}</span>
+                                 </div>
+                               )}
+                               <div className="flex items-center text-gray-400 text-[10px] font-bold uppercase tracking-widest">
+                                  <Clock className="h-3.5 w-3.5 mr-2 text-indigo-300" />
+                                  <span>{f.distance ? `Distance: ${f.distance} KM away` : 'Verified nearby facility'}</span>
+                               </div>
+                             </div>
+                          </div>
+
+                          <div className="pt-6 border-t border-gray-50 flex items-center justify-between">
+                             <div className="flex items-center space-x-2">
+                               <Button
+                                 variant="ghost"
+                                 onClick={() => callFacility(f)}
+                                 className="h-10 px-4 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all font-bold uppercase tracking-widest text-[11px]"
+                                 leftIcon={Phone}
+                               >
+                                 Call
+                               </Button>
+                             </div>
+                             <Button variant="ghost" onClick={() => openDirections(f)} className="text-primary-600 font-bold uppercase tracking-widest text-[11px] hover:translate-x-1 transition-transform" rightIcon={ChevronRight}>
+                                NAVIGATE
+                             </Button>
+                          </div>
+                       </GlassCard>
+                     );
+                   })}
+                 </div>
+               )}
+             </>
            ) : (
              <div className="bg-white border border-gray-100 rounded-[2.5rem] py-24 text-center flex flex-col items-center justify-center space-y-6">
                 <div className="p-8 bg-red-50 rounded-full"><AlertCircle className="h-10 w-10 text-red-300" /></div>
