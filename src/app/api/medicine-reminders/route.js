@@ -37,7 +37,6 @@ export async function GET(request) {
     })
 
   } catch (error) {
-    console.error('Error fetching reminders:', error)
     return NextResponse.json(
       { error: 'Failed to fetch reminders' },
       { status: 500 }
@@ -100,7 +99,6 @@ export async function POST(request) {
     })
 
   } catch (error) {
-    console.error('Error creating reminder:', error)
     return NextResponse.json(
       { error: 'Failed to create reminder' },
       { status: 500 }
@@ -168,7 +166,6 @@ export async function PUT(request) {
     })
 
   } catch (error) {
-    console.error('Error updating reminder:', error)
     return NextResponse.json(
       { error: 'Failed to update reminder' },
       { status: 500 }
@@ -213,7 +210,6 @@ export async function DELETE(request) {
     })
 
   } catch (error) {
-    console.error('Error deleting reminder:', error)
     return NextResponse.json(
       { error: 'Failed to delete reminder' },
       { status: 500 }

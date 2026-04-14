@@ -34,7 +34,11 @@ export default function LandingPage() {
     };
     checkAuth();
   }, []);
-
+useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/dashboard");
+    }
+  }, [isAuthenticated]);
   const features = [
     {
       icon: Stethoscope,
@@ -131,28 +135,25 @@ export default function LandingPage() {
 
             <div className="flex items-center space-x-6 pt-6">
               <div className="flex -space-x-3">
-                {[1,2,3,4].map(i => (
-                  <div key={i} className="w-12 h-12 rounded-2xl border-4 border-white bg-gray-100 overflow-hidden shadow-sm relative">
-                    <Image src={`https://i.pravatar.cc/150?u=${i}`} alt="user" fill className="object-cover" />
-                  </div>
-                ))}
+                <div className="w-12 h-12 rounded-2xl border-4 border-white bg-primary-100 overflow-hidden shadow-sm relative flex items-center justify-center">
+                  <Users className="h-6 w-6 text-primary-600" />
+                </div>
               </div>
               <div>
-                <p className="text-sm font-extrabold text-gray-900">10k+ Active Users</p>
-                <div className="flex text-amber-500">
-                  {[1,2,3,4,5].map(i => <Star key={i} className="h-4 w-4 fill-current" />)}
-                </div>
+                <p className="text-sm font-extrabold text-gray-900">AI-Powered Health Monitoring</p>
+                <p className="text-xs text-gray-500">Symptom analysis • Medicine reminders • Emergency SOS</p>
               </div>
             </div>
           </div>
 
           <div className={`relative transition-all duration-1000 delay-500 ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
             <div className="relative z-10 rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white/50 backdrop-blur-sm aspect-square">
-              <Image 
-                src="/images/hero_bg.png" 
-                alt="Healthcare AI" 
+              <Image
+                src="/images/hero_bg.png"
+                alt="HealthBuddy AI-powered healthcare monitoring dashboard showing symptom analysis, medicine reminders, and emergency SOS features"
                 fill
                 priority
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 className="object-cover"
               />
             </div>

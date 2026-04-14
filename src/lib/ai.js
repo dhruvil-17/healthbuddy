@@ -5,15 +5,18 @@
  * @returns {Promise<Object>} - Parsed JSON object.
  */
 export const generateStructuredAI = async (prompt, modelName = "openai/gpt-4o-mini") => {
-  if (!process.env.OPENROUTER_API_KEY) {
-    throw new Error("OPENROUTER_API_KEY is not configured");
+  const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+
+  if (!OPENROUTER_API_KEY) {
+    console.warn('OpenRouter API key not configured. AI features will not work.');
+    throw new Error("OpenRouter API key is missing");
   }
 
   try {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
         "HTTP-Referer": "https://healthbuddy.ai", // Required for OpenRouter
         "X-Title": "HealthBuddy AI Assistant", // Required for OpenRouter
         "Content-Type": "application/json"
@@ -45,12 +48,10 @@ export const generateStructuredAI = async (prompt, modelName = "openai/gpt-4o-mi
     return JSON.parse(jsonMatch[0]);
   } catch (error) {
     if (error.status === 429 || error.message?.includes('429') || error.message?.includes('quota')) {
-      console.error(`AI Quota Exceeded [${modelName}]. Please check your API billing or wait for reset.`);
       const quotaError = new Error("AI service is temporarily reaching its capacity/quota. Please try again in a few minutes.");
       quotaError.status = 429;
       throw quotaError;
     }
-    console.error(`AI generation failed [${modelName}]:`, error);
     throw error;
   }
 };

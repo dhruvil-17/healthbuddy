@@ -10,7 +10,6 @@ export const getUserProfile = async () => {
     if (!response.ok) throw new Error(data.error || 'Failed to fetch profile');
     return data.data;
   } catch (error) {
-    console.error('Error fetching user profile:', error);
     throw error;
   }
 };
@@ -26,7 +25,6 @@ export const updateUserProfile = async (profileData) => {
     if (!response.ok) throw new Error(data.error || 'Failed to update profile');
     return data.data;
   } catch (error) {
-    console.error('Error updating user profile:', error);
     throw error;
   }
 };

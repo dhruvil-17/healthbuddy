@@ -26,6 +26,7 @@ import GlassCard from "@/components/ui/GlassCard";
 import Badge from "@/components/ui/Badge";
 import Avatar from "@/components/ui/Avatar";
 import Skeleton from "@/components/ui/Skeleton";
+import { ConfirmModal } from "@/components/ui/Modal";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -33,10 +34,13 @@ export default function DashboardPage() {
   const [stats, setStats] = useState(null);
   const [isSosLoading, setIsSosLoading] = useState(false);
   const [loadingStats, setLoadingStats] = useState(true);
+  const [showSOSModal, setShowSOSModal] = useState(false);
 
-  const handleSosDispatch = async () => {
-    if (!confirm('Send SOS to emergency contacts? Location will be shared.')) return;
+  const handleSosDispatch = () => {
+    setShowSOSModal(true);
+  };
 
+  const confirmSOSDispatch = async () => {
     setIsSosLoading(true);
     try {
       let location = null;
@@ -44,53 +48,46 @@ export default function DashboardPage() {
       let payloadData = { latitude: null, longitude: null };
 
       const executeDispatch = async () => {
-          const response = await fetch('/api/sos', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payloadData),
+        const response = await fetch('/api/sos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payloadData),
+        });
+        const data = await response.json();
+        if (data.success) {
+          toast.success('SOS Dispatched', {
+            description: 'Emergency signal sent to your contacts.'
           });
-          const data = await response.json();
-          
-          if (response.ok) {
-              toast.success('SOS Sent Successfully', {
-                description: 'Signal sent to your emergency contacts. Local authorities notified.'
-              });
-          } else {
-              if (data.error === "Emergency contacts not configured in Profile.") {
-                  toast.error('SOS Failed', {
-                    description: 'You do not have Emergency Contacts saved. Please update your profile.'
-                  });
-              } else {
-                  toast.error('SOS Failed', {
-                    description: 'Failed to send SOS signal. Try calling authorities directly (102).'
-                  });
-              }
-          }
+        } else {
+          toast.error('SOS Failed', {
+            description: data.error || 'Failed to dispatch SOS signal.'
+          });
+        }
       };
 
       if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-              async (position) => {
-                  payloadData = { latitude: position.coords.latitude, longitude: position.coords.longitude };
-                  await executeDispatch();
-                  setIsSosLoading(false);
-              },
-              async (error) => {
-                  // Proceed without location if error occurs or user denies
-                  await executeDispatch();
-                  setIsSosLoading(false);
-              }
-          );
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            payloadData.latitude = position.coords.latitude;
+            payloadData.longitude = position.coords.longitude;
+            await executeDispatch();
+            setIsSosLoading(false);
+          },
+          async () => {
+            // Proceed without location if error occurs or user denies
+            await executeDispatch();
+            setIsSosLoading(false);
+          }
+        );
       } else {
-          await executeDispatch();
-          setIsSosLoading(false);
+        await executeDispatch();
+        setIsSosLoading(false);
       }
     } catch (error) {
-      console.error("SOS Error:", error);
-      toast.error('System Error', {
-        description: 'System error handling SOS.'
-      });
       setIsSosLoading(false);
+      toast.error('SOS Failed', {
+        description: 'Failed to dispatch SOS signal.'
+      });
     }
   };
 
@@ -103,7 +100,7 @@ export default function DashboardPage() {
           setStats(data.data);
         }
       } catch (error) {
-        console.error("Error fetching dashboard stats:", error);
+        // Error fetching dashboard stats - will show empty state
       } finally {
         setLoadingStats(false);
       }
@@ -404,6 +401,18 @@ export default function DashboardPage() {
           </GlassCard>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showSOSModal}
+        onClose={() => setShowSOSModal(false)}
+        onConfirm={confirmSOSDispatch}
+        title="Send Emergency SOS"
+        description="Are you sure you want to send an SOS signal to your emergency contacts? Your location will be shared with them."
+        confirmText="Send SOS"
+        cancelText="Cancel"
+        variant="danger"
+        isDestructive={true}
+      />
     </div>
   );
 }

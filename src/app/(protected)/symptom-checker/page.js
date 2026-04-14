@@ -25,6 +25,7 @@ import Input from "@/components/ui/Input";
 import Skeleton from "@/components/ui/Skeleton";
 import { useProtectedProfile } from "@/hooks/useProtectedProfile";
 import { toast } from "sonner";
+import { Modal } from "@/components/ui/Modal";
 
 export default function SymptomCheckerPage() {
   const router = useRouter();
@@ -33,6 +34,8 @@ export default function SymptomCheckerPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState(null);
   const [history, setHistory] = useState([]);
+  const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   const fetchHistory = React.useCallback(async () => {
     if (!user) return;
@@ -43,7 +46,7 @@ export default function SymptomCheckerPage() {
         setHistory(data.data);
       }
     } catch (error) {
-      console.error("Error fetching history:", error);
+      // Error fetching history - will show empty state
     }
   }, [user]);
 
@@ -76,7 +79,6 @@ export default function SymptomCheckerPage() {
         });
       }
     } catch (error) {
-      console.error("Error:", error);
       toast.error('Analysis Failed', {
         description: "Analysis failed. Please try again."
       });
@@ -95,10 +97,15 @@ export default function SymptomCheckerPage() {
     }
   };
 
+  const handleViewDetails = (historyItem) => {
+    setSelectedHistoryItem(historyItem);
+    setShowDetailsModal(true);
+  };
+
   if (profileLoading) {
     return (
       <div className="space-y-8 animate-pulse pt-4">
-        <Skeleton className="h-40 w-full rounded-[2.5rem]" />
+        <Skeleton className="h-44 w-full rounded-3xl" />
         <div className="grid lg:grid-cols-3 gap-10">
           <div className="lg:col-span-2 space-y-6">
             <Skeleton className="h-64 w-full" />
@@ -113,7 +120,7 @@ export default function SymptomCheckerPage() {
   return (
     <div className="space-y-10 pb-20">
       {/* Header Banner */}
-      <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary-600 to-indigo-700 p-8 sm:p-12 text-white shadow-2xl shadow-primary-500/20">
+      <section className="relative overflow-hidden rounded-3xl bg-linear-to-br from-violet-600 to-purple-700 p-8 sm:p-12 text-white shadow-2xl shadow-violet-500/20">
         <div className="relative z-10 space-y-4 max-w-2xl">
           <Badge variant="glass" className="bg-white/20 border-white/30 text-white">
             <Sparkles className="h-3.5 w-3.5 mr-2" />
@@ -121,9 +128,9 @@ export default function SymptomCheckerPage() {
           </Badge>
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight italic">
             AI Symptom <br className="sm:hidden" />
-            <span className="text-primary-100">Checker</span>
+            <span className="text-violet-100">Checker</span>
           </h1>
-          <p className="text-lg text-primary-50/80 font-medium leading-relaxed">
+          <p className="text-lg text-violet-50/80 font-medium leading-relaxed">
             Describe your concerns and get instant medical-grade insights powered by advanced AI.
           </p>
         </div>
@@ -149,7 +156,7 @@ export default function SymptomCheckerPage() {
           {/* Form */}
           <GlassCard className="p-10 border-transparent shadow-xl ring-1 ring-gray-100">
             <h2 className="text-2xl font-extrabold text-gray-900 mb-8 flex items-center">
-              <Activity className="h-6 w-6 mr-3 text-primary-600" />
+              <Activity className="h-6 w-6 mr-3 text-violet-600" />
               Describe Symptoms
             </h2>
             <form onSubmit={handleSubmit} className="space-y-8">
@@ -160,15 +167,15 @@ export default function SymptomCheckerPage() {
                 <textarea
                   value={symptoms}
                   onChange={(e) => setSymptoms(e.target.value)}
-                  placeholder="e.g. 'I've had a sharp pain in my upper abdomen for 2 days, and it gets worse after eating...'"
-                  className="w-full min-h-[180px] p-6 rounded-3xl bg-gray-50/50 border-2 border-gray-100 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/5 focus:bg-white transition-all duration-300 text-lg font-medium outline-none resize-none placeholder:text-gray-400"
+                  placeholder="Describe your symptoms in detail (e.g., fever, headache, fatigue, cough)"
+                  className="w-full bg-white border border-gray-200 rounded-xl p-6 min-h-45 focus:ring-4 focus:ring-violet-500/10 focus:border-violet-500 outline-none transition-all resize-none font-medium text-gray-700"
                   required
                 />
               </div>
-              <Button 
-                type="submit" 
-                size="lg" 
-                className="w-full h-16 rounded-[1.5rem] text-lg font-extrabold"
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full h-16 rounded-xl text-lg font-extrabold"
                 isLoading={isAnalyzing}
                 leftIcon={isAnalyzing ? null : Send}
               >
@@ -247,7 +254,7 @@ export default function SymptomCheckerPage() {
               history.map((check, i) => {
                 const checkDate = new Date(check.timestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
                 return (
-                  <GlassCard key={i} className="p-6 border-transparent bg-gray-50/50 hover:bg-white group cursor-pointer transition-all duration-300">
+                  <GlassCard key={i} className="p-6 border-transparent bg-gray-50/50 hover:bg-white group cursor-pointer transition-all duration-300" onClick={() => handleViewDetails(check)}>
                     <div className="flex items-center justify-between mb-3">
                       <Badge variant={getSeverityVariant(check.severity_level)} className="text-[10px] px-2.5">{check.severity_level}</Badge>
                       <span className="text-[10px] font-bold text-gray-400 uppercase">{checkDate}</span>
@@ -283,6 +290,96 @@ export default function SymptomCheckerPage() {
             </GlassCard>
           </div>
         </div>
+
+        {/* History Details Modal */}
+        <Modal
+          isOpen={showDetailsModal}
+          onClose={() => setShowDetailsModal(false)}
+          title="Symptom Check Details"
+          size="xl"
+          showCloseButton={true}
+        >
+          {selectedHistoryItem && (
+            <div className="text-left space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-extrabold text-gray-400 uppercase tracking-widest mb-1">
+                    CHECKED ON
+                  </p>
+                  <p className="text-sm font-bold text-gray-700">
+                    {new Date(selectedHistoryItem.timestamp).toLocaleString('en-GB', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+                <Badge variant={getSeverityVariant(selectedHistoryItem.severity_level)} className="py-2 px-4 text-sm uppercase tracking-wider font-extrabold">
+                  {selectedHistoryItem.severity_level} Priority
+                </Badge>
+              </div>
+
+              <hr className="border-gray-200" />
+
+              <div className="space-y-3">
+                <h4 className="text-sm font-extrabold text-gray-400 uppercase tracking-widest">SYMPTOMS DESCRIBED</h4>
+                <p className="text-base font-bold text-gray-800 leading-relaxed italic bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                  "{selectedHistoryItem.symptoms_description}"
+                </p>
+              </div>
+
+              {selectedHistoryItem.ai_response && (
+                <div className="space-y-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-extrabold text-gray-400 uppercase tracking-widest">POSSIBLE CONDITIONS</h4>
+                      <div className="space-y-2">
+                        {selectedHistoryItem.ai_response.possibleConditions?.map((c, i) => (
+                          <div key={i} className="flex items-start space-x-3 p-3 bg-gray-50/80 rounded-xl border border-gray-100">
+                            <Info className="h-4 w-4 text-primary-500 shrink-0 mt-0.5" />
+                            <span className="font-bold text-gray-800 text-sm leading-tight">{c}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-extrabold text-gray-400 uppercase tracking-widest">IMMEDIATE ACTIONS</h4>
+                      <div className="space-y-2">
+                        {selectedHistoryItem.ai_response.recommendations?.immediate?.map((a, i) => (
+                          <div key={i} className="flex items-start space-x-3 p-3 bg-emerald-50/50 rounded-xl border border-emerald-100 text-[11px] font-extrabold tracking-tight uppercase">
+                            <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                            <span className="text-emerald-800 mt-0.5">{a}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <hr className="border-gray-200" />
+
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-extrabold text-red-400 uppercase tracking-widest">EMERGENCY RED FLAGS</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {selectedHistoryItem.ai_response.warningSigns?.map((s, i) => (
+                        <div key={i} className="flex items-center space-x-3 p-3 bg-red-50/80 rounded-xl border border-red-100 text-red-900 font-bold text-sm">
+                          <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
+                          <span>{s}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-gray-50 rounded-xl text-[10px] font-bold text-gray-400 text-center uppercase tracking-widest leading-relaxed italic">
+                    {selectedHistoryItem.ai_response.disclaimer}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </Modal>
       </div>
     </div>
   );

@@ -8,7 +8,7 @@ export const signUp = async (email, password, userData) => {
     password,
     options: {
       data: userData,
-       emailRedirectTo: getRedirectURL()
+       emailRedirectTo: `${getRedirectURL()}/auth/callback`
     }
   })
   return { data, error }

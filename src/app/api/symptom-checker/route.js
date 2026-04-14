@@ -54,7 +54,7 @@ export async function POST(request) {
       .single()
 
     if (saveError) {
-      console.error('Database save error:', saveError)
+      // Database save error - silently continue as response is still returned
     }
 
     return NextResponse.json({
@@ -64,7 +64,6 @@ export async function POST(request) {
     })
 
   } catch (error) {
-    console.error('Symptom checker error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -102,7 +101,6 @@ export async function GET(request) {
     })
 
   } catch (error) {
-    console.error('Error fetching symptom history:', error)
     return NextResponse.json(
       { error: 'Failed to fetch history' },
       { status: 500 }

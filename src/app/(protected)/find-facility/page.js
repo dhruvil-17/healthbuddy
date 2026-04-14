@@ -28,6 +28,7 @@ import { useProtectedUser } from "@/hooks/useProtectedUser";
 import { toast } from "sonner";
 import Button from "@/components/ui/Button";
 import GlassCard from "@/components/ui/GlassCard";
+import { ConfirmModal } from "@/components/ui/Modal";
 import Badge from "@/components/ui/Badge";
 import Input from "@/components/ui/Input";
 import Skeleton from "@/components/ui/Skeleton";
@@ -38,6 +39,7 @@ export default function FacilityFinderPage() {
   const [selectedCity, setSelectedCity] = useState("");
   const [facilityType, setFacilityType] = useState("all");
   const [radius, setRadius] = useState(10);
+  const [showSOSModal, setShowSOSModal] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
   const router = useRouter();
   const { user, loading: autLoading } = useProtectedUser();
@@ -78,7 +80,7 @@ export default function FacilityFinderPage() {
       const data = await response.json();
       if (data.success) setFacilities(data.data);
     } catch (error) {
-      console.error("Error searching facilities:", error);
+      // Error searching facilities - will show error toast
     } finally {
       setLoading(false);
     }
@@ -104,13 +106,12 @@ export default function FacilityFinderPage() {
           setSelectedCity("Mumbai"); // Defaulting to Mumbai for demonstration
           // searchFacilities is triggered by useEffect watching selectedCity
         } catch (error) {
-          console.error("Error share location:", error);
+          // Error sharing location - will show error toast
         } finally {
           setLocationLoading(false);
         }
       },
       (error) => {
-        console.error("Geolocation error:", error);
         setLocationLoading(false);
         toast.error('Location Error', {
           description: 'Unable to retrieve your location'
@@ -336,16 +337,10 @@ export default function FacilityFinderPage() {
                         Call 102
                       </Button>
                     </a>
-                    <Button 
-                      variant="ghost" 
+                    <Button
+                      variant="ghost"
                       className="bg-red-800 text-white hover:bg-white/10 px-8 h-12 rounded-xl font-bold border-white/20"
-                      onClick={() => {
-                        if (confirm(`Trigger SOS in ${selectedCity || 'your area'}?`)) {
-                          toast.warning('SOS Triggered', {
-                            description: '🚨 SOS triggered! Location shared with emergency services and contacts.'
-                          });
-                        }
-                      }}
+                      onClick={() => setShowSOSModal(true)}
                     >
                       Trigger SOS
                     </Button>
@@ -355,6 +350,22 @@ export default function FacilityFinderPage() {
            </GlassCard>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showSOSModal}
+        onClose={() => setShowSOSModal(false)}
+        onConfirm={() => {
+          toast.warning('SOS Triggered', {
+            description: '🚨 SOS triggered! Location shared with emergency services and contacts.'
+          });
+        }}
+        title="Trigger Emergency SOS"
+        description={`Are you sure you want to trigger SOS in ${selectedCity || 'your area'}? This will share your location with emergency services and your emergency contacts.`}
+        confirmText="Trigger SOS"
+        cancelText="Cancel"
+        variant="danger"
+        isDestructive={true}
+      />
     </div>
   );
 }

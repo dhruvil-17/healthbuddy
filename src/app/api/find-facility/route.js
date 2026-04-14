@@ -75,7 +75,6 @@ export async function GET(request) {
     })
 
   } catch (error) {
-    console.error('Facility finder error:', error)
     return NextResponse.json(
       { error: 'Failed to find facilities' },
       { status: 500 }
@@ -112,7 +111,6 @@ export async function POST(request) {
     })
 
   } catch (error) {
-    console.error('Error fetching search history:', error)
     return NextResponse.json(
       { error: 'Failed to fetch search history' },
       { status: 500 }

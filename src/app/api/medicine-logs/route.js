@@ -56,7 +56,6 @@ export async function GET(request) {
     })
 
   } catch (error) {
-    console.error('Error fetching medicine logs:', error)
     return NextResponse.json(
       { error: 'Failed to fetch medicine logs' },
       { status: 500 }
@@ -152,7 +151,6 @@ export async function POST(request) {
     })
 
   } catch (error) {
-    console.error('Error updating medicine log:', error)
     return NextResponse.json(
       { error: 'Failed to update medicine log' },
       { status: 500 }
@@ -225,7 +223,6 @@ export async function PUT(request) {
     })
 
   } catch (error) {
-    console.error('Error generating today\'s schedule:', error)
     return NextResponse.json(
       { error: 'Failed to generate today\'s schedule' },
       { status: 500 }

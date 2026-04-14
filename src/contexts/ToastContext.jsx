@@ -17,13 +17,10 @@ export const ToastProvider = ({ children }) => {
   const toast = useCallback(({ type = 'info', title, description, duration = 5000 }) => {
     const id = Date.now() + Math.random();
     const newToast = { id, type, title, description, duration };
-    
+
     setToasts(prev => [...prev, newToast]);
-    
-    // Auto remove after duration
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, duration);
+
+    // Note: Auto-dismissal is handled by Toast.jsx component with proper cleanup
   }, []);
 
   const success = useCallback((title, description) => {

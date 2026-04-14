@@ -47,7 +47,7 @@ export function useProtectedProfile() {
         
         setProfile(augmentedProfile)
       } catch (error) {
-        console.error('Error fetching profile in hook:', error)
+        // Error fetching profile - will be handled by component
       } finally {
         setLoading(false)
       }

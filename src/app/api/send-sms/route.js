@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import twilio from "twilio";
 
-// Check if Twilio credentials are configured
+// Validate required environment variables
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER;
 
 if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
-  console.warn('Twilio credentials not configured. SMS will not be sent.');
+  console.warn('Twilio credentials not configured. SMS will be mocked.');
 }
 
 const client = TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN 
@@ -28,9 +28,8 @@ export async function POST(req) {
 
     // Check if Twilio is configured
     if (!client || !TWILIO_PHONE_NUMBER) {
-      console.log('SMS Mock - Twilio not configured:', { to, message });
-      return NextResponse.json({ 
-        success: true, 
+      return NextResponse.json({
+        success: true,
         sid: 'mock-sms-id',
         mock: true,
         message: 'SMS mocked - Twilio credentials not configured'
@@ -43,11 +42,17 @@ export async function POST(req) {
       to,
     });
 
+    console.log('SMS sent successfully:', sms.sid);
     return NextResponse.json({ success: true, sid: sms.sid });
   } catch (err) {
-    console.error('SMS Error:', err);
+    console.error('Twilio error:', err);
     return NextResponse.json(
-      { success: false, error: 'Failed to send SMS' },
+      {
+        success: false,
+        error: err.message || 'Failed to send SMS',
+        code: err.code,
+        status: err.status
+      },
       { status: 500 }
     );
   }

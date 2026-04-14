@@ -1,26 +1,27 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  Pill, 
-  Plus, 
-  Clock, 
-  Calendar, 
-  CheckCircle, 
-  XCircle, 
-  Edit3, 
-  Trash2, 
-  ArrowLeft, 
-  Heart, 
-  Loader2, 
-  AlertCircle, 
-  Bell, 
+import {
+  Pill,
+  Plus,
+  Clock,
+  Calendar,
+  CheckCircle,
+  XCircle,
+  Edit3,
+  Trash2,
+  ArrowLeft,
+  Heart,
+  Loader2,
+  AlertCircle,
+  Bell,
   History,
   Sparkles,
   Zap,
   ChevronRight,
   TrendingUp,
-  Info
+  Info,
+  Search
 } from "lucide-react";
 import { useProtectedUser } from "@/hooks/useProtectedUser";
 import Button from "@/components/ui/Button";
@@ -29,6 +30,7 @@ import Badge from "@/components/ui/Badge";
 import Input from "@/components/ui/Input";
 import Skeleton from "@/components/ui/Skeleton";
 import Avatar from "@/components/ui/Avatar";
+import { ConfirmModal } from "@/components/ui/Modal";
 
 export default function MedicineRemindersPage() {
   const [reminders, setReminders] = useState([]);
@@ -37,6 +39,9 @@ export default function MedicineRemindersPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingReminder, setEditingReminder] = useState(null);
   const [activeTab, setActiveTab] = useState('today'); // today, reminders
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [reminderToDelete, setReminderToDelete] = useState(null);
   const router = useRouter();
   const { user, loading: autLoading } = useProtectedUser();
 
@@ -59,6 +64,18 @@ export default function MedicineRemindersPage() {
     { value: 'as_needed', label: 'As Needed' }
   ];
 
+  // Filter reminders based on search query
+  const filteredReminders = reminders.filter(reminder =>
+    reminder.medicine_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    reminder.dosage.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Filter today's schedule based on search query
+  const filteredTodayLogs = todaysSchedule.filter(log =>
+    log.reminder.medicine_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    log.reminder.dosage.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const loadData = async (userId) => {
     setLoading(true);
     try {
@@ -75,7 +92,7 @@ export default function MedicineRemindersPage() {
       if (remData.success) setReminders(remData.data);
       if (schedData.success) setTodaysSchedule(schedData.data);
     } catch (error) {
-      console.error('Error loading data:', error);
+      // Error loading data - will show empty state
     } finally {
       setLoading(false);
     }
@@ -116,7 +133,7 @@ export default function MedicineRemindersPage() {
         resetForm();
       }
     } catch (error) {
-      console.error('Error saving reminder:', error);
+      // Error saving reminder - will show error toast
     }
   };
 
@@ -136,6 +153,17 @@ export default function MedicineRemindersPage() {
 
   const updateMedicineStatus = async (item, status) => {
     if (!user) return;
+
+    // Optimistic UI update - update immediately before API call
+    const previousLogs = [...todayLogs];
+    const updatedLogs = todayLogs.map(log => {
+      if (log.scheduledTime === item.scheduledTime && log.reminder.id === item.reminder.id) {
+        return { ...log, status };
+      }
+      return log;
+    });
+    setTodayLogs(updatedLogs);
+
     try {
       const response = await fetch('/api/medicine-logs', {
         method: 'POST',
@@ -148,26 +176,48 @@ export default function MedicineRemindersPage() {
           takenTime: status === 'taken' ? new Date().toISOString() : null
         })
       });
-      if (response.ok) await loadData(user.id);
+
+      if (!response.ok) {
+        // Revert optimistic update if API call fails
+        setTodayLogs(previousLogs);
+        toast.error('Update Failed', {
+          description: 'Failed to update medicine status. Please try again.'
+        });
+      }
     } catch (error) {
-      console.error('Error updating status:', error);
+      // Revert optimistic update if error occurs
+      setTodayLogs(previousLogs);
+      toast.error('Update Failed', {
+        description: 'Failed to update medicine status. Please try again.'
+      });
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Remove this schedule?') || !user) return;
+    if (!user) return;
+    setReminderToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!user || !reminderToDelete) return;
     try {
-      const res = await fetch(`/api/medicine-reminders?reminderId=${id}&userId=${user.id}`, { method: 'DELETE' });
-      if (res.ok) await loadData(user.id);
+      const res = await fetch(`/api/medicine-reminders?reminderId=${reminderToDelete}&userId=${user.id}`, { method: 'DELETE' });
+      if (res.ok) {
+        await loadData(user.id);
+        toast.success('Schedule Deleted', {
+          description: 'Medicine schedule removed successfully.'
+        });
+      }
     } catch (error) {
-      console.error('Error deleting:', error);
+      // Error deleting - will show error toast
     }
   };
 
   if (autLoading || loading) {
     return (
-      <div className="space-y-8 animate-pulse pt-4">
-        <Skeleton className="h-44 w-full rounded-[2.5rem]" />
+      <div className="space-y-6 pt-4">
+        <Skeleton className="h-44 w-full rounded-3xl" />
         <div className="flex space-x-4">
            <Skeleton className="h-12 w-48 rounded-2xl" />
            <Skeleton className="h-12 w-48 rounded-2xl" />
@@ -185,9 +235,9 @@ export default function MedicineRemindersPage() {
   return (
     <div className="space-y-10 pb-20">
       {/* Header Banner */}
-      <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-violet-600 to-purple-700 p-8 sm:p-12 text-white shadow-2xl shadow-violet-500/20">
+      <section className="relative overflow-hidden rounded-3xl bg-linear-to-br from-violet-600 to-purple-700 p-8 sm:p-12 text-white shadow-2xl shadow-violet-500/20">
         <div className="relative z-10 space-y-4 max-w-2xl">
-          <Badge variant="glass" className="bg-white/20 border-white/30 text-white font-extrabold uppercase tracking-widest text-[10px]">
+          <Badge variant="glass" className="w-full border-gray-200 text-gray-600 font-extrabold text-xs uppercase tracking-widest hover:bg-white rounded-xl h-13">
              Precision Adherence Engine
           </Badge>
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight italic">
@@ -198,7 +248,7 @@ export default function MedicineRemindersPage() {
             Synchronize your treatment schedule with AI-driven adherence tracking and proactive refill alerts.
           </p>
           <div className="pt-4 flex flex-wrap gap-4">
-             <Button variant="secondary" className="bg-white text-violet-700 hover:bg-violet-50 h-12 px-8 rounded-xl font-extrabold" onClick={() => setShowAddForm(true)} leftIcon={Plus}>
+             <Button variant="secondary" className="bg-linear-to-br from-primary-500 to-primary-600 text-white hover:bg-white/10 h-12 px-8 rounded-3xl font-extrabold" onClick={() => setShowAddForm(true)} leftIcon={Plus}>
                 Schedule Medication
              </Button>
           </div>
@@ -207,7 +257,7 @@ export default function MedicineRemindersPage() {
       </section>
 
       {/* Tabs & Controls */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
          <div className="flex p-1.5 bg-gray-100 rounded-2xl space-x-1">
             {['today', 'reminders'].map(tab => (
               <button
@@ -218,6 +268,15 @@ export default function MedicineRemindersPage() {
                 {tab === 'today' ? "Today's Schedule" : "All Medications"}
               </button>
             ))}
+         </div>
+         <div className="flex-1 max-w-md">
+           <Input
+             placeholder="Search medicines..."
+             value={searchQuery}
+             onChange={(e) => setSearchQuery(e.target.value)}
+             icon={Search}
+             className="h-10"
+           />
          </div>
          <div className="hidden sm:flex items-center space-x-2 bg-emerald-50 text-emerald-600 px-4 py-2 rounded-xl border border-emerald-100 italic">
             <TrendingUp className="h-4 w-4" />
@@ -233,7 +292,7 @@ export default function MedicineRemindersPage() {
         <div className="lg:col-span-2 space-y-6">
           {activeTab === 'today' ? (
             <div className="space-y-4">
-               {todaysSchedule.length > 0 ? todaysSchedule.map((item, i) => {
+               {filteredTodayLogs.length > 0 ? filteredTodayLogs.map((item, i) => {
                  const time = new Date(item.scheduledTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
                  const isTaken = item.status === 'taken';
                  const isMissed = item.status === 'missed';
@@ -244,7 +303,7 @@ export default function MedicineRemindersPage() {
                             <Pill className="h-full w-full" />
                          </div>
                          <div>
-                            <h3 className="text-lg font-extrabold text-gray-900 group-hover:text-primary-600 transition-colors">{item.reminder.medicine_name}</h3>
+                            <h3 className="text-lg font-extrabold text-gray-900">{item.reminder.medicine_name}</h3>
                             <div className="flex items-center space-x-3 mt-1">
                                <Badge variant={isTaken ? "success" : isMissed ? "danger" : "neutral"} className="py-0.5 px-2 text-[9px] uppercase">{item.status}</Badge>
                                <span className="text-xs font-bold text-gray-400 flex items-center"><Clock className="h-3 w-3 mr-1" /> {time}</span>
@@ -273,7 +332,7 @@ export default function MedicineRemindersPage() {
             </div>
           ) : (
             <div className="grid gap-6">
-               {reminders.map((rem, i) => (
+               {filteredReminders.length > 0 ? filteredReminders.map((rem, i) => (
                  <GlassCard key={i} className="p-8 border-transparent shadow-xl ring-1 ring-gray-100 flex items-center justify-between group">
                     <div className="flex items-center space-x-6">
                        <div className="h-16 w-16 rounded-2xl bg-violet-50 text-violet-600 p-4 shadow-lg shadow-violet-500/10 group-hover:scale-110 transition-transform duration-500">
@@ -293,7 +352,13 @@ export default function MedicineRemindersPage() {
                        <button onClick={() => handleDelete(rem.id)} className="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all"><Trash2 className="h-5 w-5" /></button>
                     </div>
                  </GlassCard>
-               ))}
+               )) : (
+                 <div className="py-24 bg-white/50 border-2 border-dashed border-gray-200 rounded-[3rem] text-center flex flex-col items-center justify-center space-y-6">
+                    <div className="p-6 bg-gray-100 rounded-full"><Pill className="h-12 w-12 text-gray-300" /></div>
+                    <h3 className="text-2xl font-extrabold text-gray-900">No Medications Found</h3>
+                    <p className="text-gray-500 font-medium max-w-sm italic">{searchQuery ? 'Try a different search term' : 'Add your first medication schedule'}</p>
+                 </div>
+               )}
             </div>
           )}
         </div>
@@ -348,7 +413,7 @@ export default function MedicineRemindersPage() {
 
       {/* Add/Edit Modal */}
       {showAddForm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
            <GlassCard className="w-full max-w-2xl p-8 sm:p-12 border-transparent shadow-2xl relative animate-in zoom-in-95 slide-in-from-bottom-8 duration-500 max-h-[90vh] overflow-y-auto">
               <button onClick={resetForm} className="absolute right-8 top-8 p-2 bg-gray-100 text-gray-400 rounded-xl hover:bg-gray-200 transition-all">
                  <XCircle className="h-6 w-6" />
@@ -369,7 +434,7 @@ export default function MedicineRemindersPage() {
                     
                     <div className="space-y-2">
                        <label className="text-sm font-bold text-gray-700 ml-1">Frequency</label>
-                       <select value={formData.frequency} onChange={e => handleFrequencyChange(e.target.value)} className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3.5 px-4 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all font-medium h-[52px]">
+                       <select value={formData.frequency} onChange={e => handleFrequencyChange(e.target.value)} className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3.5 px-4 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all font-medium h-13">
                           {frequencyOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                        </select>
                     </div>
@@ -396,6 +461,21 @@ export default function MedicineRemindersPage() {
            </GlassCard>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setReminderToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Delete Medicine Schedule"
+        description="Are you sure you want to remove this medicine schedule? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        isDestructive={true}
+      />
     </div>
   );
 }

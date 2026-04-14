@@ -40,14 +40,22 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     <>
       {/* Mobile Backdrop */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/20 backdrop-blur-sm z-60 lg:hidden"
           onClick={toggleSidebar}
         />
       )}
 
+      {/* Desktop Backdrop - shows when sidebar is expanded on larger screens */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-transparent z-60 hidden lg:block"
+          onClick={toggleSidebar}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside 
+      <aside
         className={`
           fixed top-0 left-0 h-screen glass-sidebar z-70 shadow-2xl transition-all duration-500 ease-in-out
           ${isOpen ? "translate-x-0 w-72" : "-translate-x-full lg:translate-x-0 lg:w-20 lg:hover:w-72 group"}

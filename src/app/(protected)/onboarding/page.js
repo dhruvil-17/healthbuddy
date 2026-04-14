@@ -73,7 +73,6 @@ export default function OnboardingPage() {
 
       router.push("/dashboard");
     } catch (error) {
-      console.error("Error creating profile:", error);
       toast.error('Profile Error', {
         description: "Failed to save profile. Please try again."
       });
@@ -85,7 +84,7 @@ export default function OnboardingPage() {
   if (autLoading) return <div className="h-screen flex items-center justify-center bg-gray-50"><Loader /></div>;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 sm:p-8 relative overflow-hidden">
+    <div className="min-h-screen bg-linear-to-r from-primary-50 to-violet-50 flex items-center justify-center p-4 sm:p-8 relative overflow-hidden">
       {/* Background blur elements */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-primary-200/20 rounded-full blur-[100px] -mr-48 -mt-48 animate-pulse-slow" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent-200/20 rounded-full blur-[100px] -ml-48 -mb-48 animate-glow" />
@@ -133,7 +132,7 @@ export default function OnboardingPage() {
         </div>
 
         {/* Step Content */}
-        <GlassCard className="lg:col-span-3 p-8 sm:p-12 border-transparent shadow-2xl ring-1 ring-gray-100 min-h-[500px] flex flex-col">
+        <GlassCard className="lg:col-span-3 p-8 sm:p-12 border-transparent shadow-2xl ring-1 ring-gray-100 min-h-125 flex flex-col">
           <div className="flex-1 space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
             {step === 1 && (
               <div className="space-y-8">
@@ -152,8 +151,8 @@ export default function OnboardingPage() {
                   />
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-gray-700 ml-1">Your Gender</label>
-                    <select 
-                      className="w-full bg-white/70 backdrop-blur-sm border border-gray-200 rounded-xl py-3 px-4 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all duration-300 font-medium h-[52px]"
+                    <select
+                      className="w-full bg-white/70 backdrop-blur-sm border border-gray-200 rounded-xl py-3 px-4 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all duration-300 font-medium h-13"
                       value={formData.gender}
                       onChange={e => setFormData({...formData, gender: e.target.value})}
                     >
@@ -165,8 +164,8 @@ export default function OnboardingPage() {
                   </div>
                   <div className="space-y-2 sm:col-span-2">
                     <label className="text-sm font-semibold text-gray-700 ml-1">Preferred Language</label>
-                    <select 
-                      className="w-full bg-white/70 backdrop-blur-sm border border-gray-200 rounded-xl py-3 px-4 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all duration-300 font-medium h-[52px]"
+                    <select
+                      className="w-full bg-white/70 backdrop-blur-sm border border-gray-200 rounded-xl py-3 px-4 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all duration-300 font-medium h-13"
                       value={formData.preferredLanguage}
                       onChange={e => setFormData({...formData, preferredLanguage: e.target.value})}
                     >

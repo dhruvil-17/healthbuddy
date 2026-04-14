@@ -1,12 +1,32 @@
 import { NextResponse } from 'next/server'
 import { createClient, getSessionUser } from '@/lib/supabase-server'
 
+// Validate required environment variables
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+if (!process.env.NEXT_PUBLIC_BASE_URL) {
+  console.warn('NEXT_PUBLIC_BASE_URL not configured, using default: http://localhost:3000');
+}
+
+// Helper function to format phone number to E.164 standard
+// Note: This assumes Indian numbers (+91) by default. For international support,
+// users should enter phone numbers with their country code in the profile.
+const formatPhoneNumber = (phone) => {
+  // If already in E.164 format (starts with +), return as-is
+  if (phone.startsWith('+')) {
+    return phone;
+  }
+  // If it's a 10-digit number, assume Indian and add +91
+  if (phone.length === 10 && /^\d+$/.test(phone)) {
+    return `+91${phone}`;
+  }
+  // Otherwise, try to use as-is (may fail with Twilio)
+  return phone;
+};
+
 export async function POST(request) {
   try {
     const user = await getSessionUser()
-    
-    console.log('SOS Request - User:', user?.id)
-    
+
     if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -15,11 +35,10 @@ export async function POST(request) {
     }
 
     const { latitude, longitude } = await request.json()
-    console.log('SOS Request - Location:', { latitude, longitude })
-    
+
     // Safety check for valid coordinates logic
-    const locationInfo = (latitude && longitude) 
-        ? `https://www.google.com/maps?q=${latitude},${longitude}` 
+    const locationInfo = (latitude && longitude)
+        ? `https://www.google.com/maps?q=${latitude},${longitude}`
         : "Location blocked or unavailable.";
 
     const supabase = await createClient()
@@ -28,9 +47,6 @@ export async function POST(request) {
       .select('emergency_contact_name, emergency_contact_phone')
       .eq('id', user.id)
       .single()
-
-    console.log('SOS Request - Profile data:', profile)
-    console.log('SOS Request - Profile error:', error)
 
     if (error || !profile) throw error
 
@@ -43,11 +59,8 @@ export async function POST(request) {
       }];
     }
 
-    console.log('SOS Request - Emergency contacts:', emergencyContacts)
-
     // Validate the profile actually has emergency contacts configured
     if (emergencyContacts.length === 0) {
-        console.log('SOS Request - No emergency contacts found')
         return NextResponse.json({
             success: false,
             error: "Emergency contacts not configured in Profile."
@@ -55,17 +68,16 @@ export async function POST(request) {
     }
 
     const patientName = user.user_metadata?.full_name || user.user_metadata?.name || 'A user';
-    console.log('SOS Request - Patient name:', patientName)
     
     // Send SOS to all emergency contacts via send-sms API
     const sosPromises = emergencyContacts.map(async (contact) => {
       const helpMessage = `URGENT SOS: Hello ${contact.name}, ${patientName} has pressed their emergency help button on HealthBuddy and may need immediate assistance. Please contact them. Location: ${locationInfo}`;
-      
-      // Format phone number with country code (assuming Indian numbers)
-      const formattedPhone = contact.phone.startsWith('+') ? contact.phone : `+91${contact.phone}`;
-      
+
+      // Format phone number to E.164 standard
+      const formattedPhone = formatPhoneNumber(contact.phone);
+
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/send-sms`, {
+        const response = await fetch(`${BASE_URL}/api/send-sms`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -74,10 +86,8 @@ export async function POST(request) {
           }),
         });
         const data = await response.json();
-        console.log(`SOS sent to ${contact.name} (${contact.phone}):`, data);
         return data;
       } catch (error) {
-        console.error(`Failed to send SOS to ${contact.name}:`, error);
         return { success: false, error: error.message };
       }
     });
@@ -85,14 +95,35 @@ export async function POST(request) {
     // Wait for all SOS messages to be sent
     const results = await Promise.all(sosPromises);
 
-    console.log('SOS Request - Successfully dispatched')
+    console.log('SMS sending results:', results);
+
+    // Check if any SMS was mocked (Twilio not configured)
+    const mockResponses = results.filter(r => r.mock);
+    if (mockResponses.length > 0) {
+      return NextResponse.json({
+        success: false,
+        error: "SMS service not configured. Please add TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER to your environment variables.",
+        mock: true
+      }, { status: 500 });
+    }
+
+    // Check if any SMS failed
+    const failedResponses = results.filter(r => !r.success);
+    if (failedResponses.length > 0) {
+      console.error('Failed SMS responses:', failedResponses);
+      return NextResponse.json({
+        success: false,
+        error: `Failed to send SOS SMS. Details: ${failedResponses.map(r => r.error || 'Unknown error').join(', ')}`,
+        details: failedResponses
+      }, { status: 500 });
+    }
+
     return NextResponse.json({
       success: true,
       message: "SOS signal successfully dispatched."
     })
 
   } catch (error) {
-    console.error('Error dispatching SOS:', error)
     return NextResponse.json(
       { error: 'Failed to dispatch SOS signal.' },
       { status: 500 }

@@ -57,7 +57,7 @@ export default function HealthTips() {
       const result = await response.json();
       if (result.success) setHealthTips(result.data);
     } catch (error) {
-      console.error('Error generating health tips:', error);
+      // Error generating health tips - will show error toast
     } finally {
       setGenerating(false);
     }

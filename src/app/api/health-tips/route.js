@@ -146,7 +146,7 @@ Be specific and practical.`;
       .single()
 
     if (saveError) {
-      console.error('Error saving health tips:', saveError)
+      // Database save error - silently continue as response is still returned
     }
 
     return NextResponse.json({
@@ -156,7 +156,6 @@ Be specific and practical.`;
     })
 
   } catch (error) {
-    console.error('Health tips API error:', error)
     return NextResponse.json(
       { error: 'Failed to generate health tips' },
       { status: 500 }
@@ -194,7 +193,6 @@ export async function GET(request) {
     })
 
   } catch (error) {
-    console.error('Error fetching health tips history:', error)
     return NextResponse.json(
       { error: 'Failed to fetch health tips history' },
       { status: 500 }

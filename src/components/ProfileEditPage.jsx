@@ -26,49 +26,80 @@ export const ProfileEditPage = ({ initialProfile, onSave, onCancel }) => {
     age: '',
     gender: '',
     preferred_language: 'English',
-    emergency_contacts: [],
+    emergency_contact_name: '',
+    emergency_contact_phone: '',
     location: '',
     existing_conditions: []
   });
-  
+
   const [newCondition, setNewCondition] = useState('');
-  const [newContact, setNewContact] = useState({ name: '', phone: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (initialProfile) {
-      // Handle migration from single contact to multiple contacts
-      const emergencyContacts = initialProfile.emergency_contacts || 
-        (initialProfile.emergency_contact_name ? [{
-          name: initialProfile.emergency_contact_name,
-          phone: initialProfile.emergency_contact_phone || ''
-        }] : []);
-      
       setProfile({
         age: initialProfile.age?.toString() || '',
         gender: initialProfile.gender || '',
         preferred_language: initialProfile.preferred_language || 'English',
-        emergency_contacts: emergencyContacts,
+        emergency_contact_name: initialProfile.emergency_contact_name || '',
+        emergency_contact_phone: initialProfile.emergency_contact_phone || '',
         location: initialProfile.location || '',
         existing_conditions: initialProfile.existing_conditions || []
       });
     }
   }, [initialProfile]);
 
+  const validateField = (field, value) => {
+    const fieldErrors = { ...errors };
+
+    switch (field) {
+      case 'age':
+        if (!value || value < 1 || value > 150) {
+          fieldErrors.age = 'Invalid age (1-150)';
+        } else {
+          delete fieldErrors.age;
+        }
+        break;
+      case 'gender':
+        if (!value) {
+          fieldErrors.gender = 'Gender is required';
+        } else {
+          delete fieldErrors.gender;
+        }
+        break;
+      case 'preferred_language':
+        if (!value) {
+          fieldErrors.preferred_language = 'Language is required';
+        } else {
+          delete fieldErrors.preferred_language;
+        }
+        break;
+      case 'emergency_contact_phone':
+        if (value && !/^\d{10}$/.test(value.replace(/\s/g, ''))) {
+          fieldErrors.emergency_contact_phone = 'Invalid 10-digit phone number';
+        } else {
+          delete fieldErrors.emergency_contact_phone;
+        }
+        break;
+      default:
+        break;
+    }
+
+    setErrors(fieldErrors);
+  };
+
   const validateForm = () => {
     const newErrors = {};
     if (!profile.age || profile.age < 1 || profile.age > 150) newErrors.age = 'Invalid age (1-150)';
     if (!profile.gender) newErrors.gender = 'Gender is required';
     if (!profile.preferred_language) newErrors.preferred_language = 'Language is required';
-    
-    // Validate emergency contacts
-    profile.emergency_contacts.forEach((contact, index) => {
-      if (contact.phone && !/^\d{10}$/.test(contact.phone.replace(/\s/g, ''))) {
-        newErrors[`emergency_contact_${index}_phone`] = 'Invalid 10-digit phone number';
-      }
-    });
-    
+
+    // Validate emergency contact
+    if (profile.emergency_contact_phone && !/^\d{10}$/.test(profile.emergency_contact_phone.replace(/\s/g, ''))) {
+      newErrors.emergency_contact_phone = 'Invalid 10-digit phone number';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -79,7 +110,7 @@ export const ProfileEditPage = ({ initialProfile, onSave, onCancel }) => {
     try {
       await onSave({ ...profile, age: parseInt(profile.age) });
     } catch (error) {
-      console.error('Error saving profile:', error);
+      // Error saving profile - will be handled by parent component
     } finally {
       setIsLoading(false);
     }
@@ -99,29 +130,6 @@ export const ProfileEditPage = ({ initialProfile, onSave, onCancel }) => {
     setProfile(prev => ({
       ...prev,
       existing_conditions: prev.existing_conditions.filter(cond => cond !== c)
-    }));
-  };
-
-  const addEmergencyContact = () => {
-    if (newContact.name.trim() && newContact.phone.trim()) {
-      const cleanPhone = newContact.phone.replace(/\s/g, '');
-      if (/^\d{10}$/.test(cleanPhone)) {
-        setProfile(prev => ({
-          ...prev,
-          emergency_contacts: [...prev.emergency_contacts, {
-            name: newContact.name.trim(),
-            phone: cleanPhone
-          }]
-        }));
-        setNewContact({ name: '', phone: '' });
-      }
-    }
-  };
-
-  const removeEmergencyContact = (index) => {
-    setProfile(prev => ({
-      ...prev,
-      emergency_contacts: prev.emergency_contacts.filter((_, i) => i !== index)
     }));
   };
 
@@ -157,21 +165,29 @@ export const ProfileEditPage = ({ initialProfile, onSave, onCancel }) => {
               Basic Information
             </h2>
             <div className="grid sm:grid-cols-2 gap-8">
-              <Input 
-                label="Age" 
-                type="number" 
-                value={profile.age} 
-                onChange={(e) => setProfile({...profile, age: e.target.value})}
+              <Input
+                label="Age"
+                type="number"
+                value={profile.age}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setProfile({...profile, age: value});
+                  validateField('age', value ? parseInt(value) : '');
+                }}
                 error={errors.age}
                 placeholder="Years"
                 icon={Calendar}
               />
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700 ml-1">Gender</label>
-                <select 
+                <select
                   className="w-full bg-white/70 backdrop-blur-sm border border-gray-200 rounded-xl py-3 px-4 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all duration-300 font-medium h-13"
                   value={profile.gender}
-                  onChange={(e) => setProfile({...profile, gender: e.target.value})}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setProfile({...profile, gender: value});
+                    validateField('gender', value);
+                  }}
                 >
                   <option value="">Select Gender</option>
                   <option value="Male">Male</option>
@@ -183,10 +199,14 @@ export const ProfileEditPage = ({ initialProfile, onSave, onCancel }) => {
 
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700 ml-1">Preferred Language</label>
-                <select 
+                <select
                   className="w-full bg-white/70 backdrop-blur-sm border border-gray-200 rounded-xl py-3 px-4 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all duration-300 font-medium h-13"
                   value={profile.preferred_language}
-                  onChange={(e) => setProfile({...profile, preferred_language: e.target.value})}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setProfile({...profile, preferred_language: value});
+                    validateField('preferred_language', value);
+                  }}
                 >
                   <option value="English">English</option>
                   <option value="Hindi">Hindi</option>
@@ -195,9 +215,9 @@ export const ProfileEditPage = ({ initialProfile, onSave, onCancel }) => {
                 </select>
               </div>
 
-              <Input 
-                label="Location" 
-                value={profile.location} 
+              <Input
+                label="Location"
+                value={profile.location}
                 onChange={(e) => setProfile({...profile, location: e.target.value})}
                 placeholder="City/Region"
                 icon={MapPin}
@@ -208,64 +228,29 @@ export const ProfileEditPage = ({ initialProfile, onSave, onCancel }) => {
           <GlassCard className="p-10 border-transparent shadow-xl ring-1 ring-gray-100">
             <h2 className="text-2xl font-extrabold text-gray-900 mb-8 flex items-center">
               <Phone className="h-6 w-6 mr-3 text-red-500" />
-              Emergency Contacts
+              Emergency Contact
             </h2>
-            
-            {/* Add New Contact Form */}
-            <div className="mb-6 p-6 bg-red-50 rounded-2xl border border-red-100">
-              <h3 className="text-lg font-bold text-red-900 mb-4">Add New Contact</h3>
-              <div className="grid sm:grid-cols-2 gap-4 mb-4">
-                <Input 
-                  label="Full Name" 
-                  value={newContact.name} 
-                  onChange={(e) => setNewContact({...newContact, name: e.target.value})}
-                  placeholder="Contact person's name"
-                  icon={User}
-                />
-                <Input 
-                  label="Phone Number" 
-                  value={newContact.phone} 
-                  onChange={(e) => setNewContact({...newContact, phone: e.target.value})}
-                  placeholder="10-digit number"
-                  icon={Phone}
-                />
-              </div>
-              <Button 
-                onClick={addEmergencyContact} 
-                className="w-full sm:w-auto"
-                leftIcon={Plus}
-                disabled={!newContact.name.trim() || !newContact.phone.trim()}
-              >
-                Add Contact
-              </Button>
-            </div>
-            
-            {/* Existing Contacts */}
-            <div className="space-y-4">
-              {profile.emergency_contacts.map((contact, index) => (
-                <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-200">
-                  <div className="flex items-center space-x-4">
-                    <Avatar name={contact.name} size="sm" className="border-2 border-red-200" />
-                    <div>
-                      <p className="font-bold text-gray-900">{contact.name}</p>
-                      <p className="text-sm text-gray-600">{contact.phone}</p>
-                    </div>
-                  </div>
-                  <Button 
-                    variant="danger" 
-                    size="sm"
-                    onClick={() => removeEmergencyContact(index)}
-                    leftIcon={X}
-                  >
-                    Remove
-                  </Button>
-                </div>
-              ))}
-              {profile.emergency_contacts.length === 0 && (
-                <p className="text-sm font-bold text-gray-400 uppercase tracking-widest text-center py-8 italic">
-                  No emergency contacts added. Add at least one contact for safety.
-                </p>
-              )}
+
+            <div className="space-y-6">
+              <Input
+                label="Emergency Contact Name"
+                value={profile.emergency_contact_name}
+                onChange={(e) => setProfile({...profile, emergency_contact_name: e.target.value})}
+                placeholder="Contact person's name"
+                icon={User}
+              />
+              <Input
+                label="Emergency Contact Phone"
+                value={profile.emergency_contact_phone}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setProfile({...profile, emergency_contact_phone: value});
+                  validateField('emergency_contact_phone', value);
+                }}
+                placeholder="10-digit number"
+                icon={Phone}
+                error={errors.emergency_contact_phone}
+              />
             </div>
           </GlassCard>
         </div>
