@@ -276,12 +276,12 @@ export default function HealthTips() {
                       </div>
                       <div className="mt-8 p-6 bg-red-900 text-white rounded-3xl flex items-center justify-between">
                          <div>
-                            <h4 className="font-extrabold mb-1">Emergency Protocols</h4>
+                            <h4 className="font-extrabold mb-1 text-white">Emergency Protocols</h4>
                             <p className="text-xs text-red-200 font-medium">{healthTips.emergencyGuidelines?.whenToCall}</p>
                          </div>
                          <Button 
                            variant="danger" 
-                           className="bg-white text-red-900 hover:bg-red-50 px-6 h-12 rounded-xl font-extrabold"
+                           className="px-6 h-12 rounded-xl font-extrabold"
                            onClick={() => {
                              toast.warning('Emergency SOS', {
                                description: '🚨 EMERGENCY SOS ACTIVATED! Signal sent to contacts + authorities.'
