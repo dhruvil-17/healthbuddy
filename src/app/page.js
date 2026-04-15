@@ -16,30 +16,52 @@ import {
   ArrowRight,
   Sparkles,
   ShieldCheck,
-  Activity
+  Activity,
+  Loader2
 } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import Button from "@/components/ui/Button";
 import GlassCard from "@/components/ui/GlassCard";
 import Badge from "@/components/ui/Badge";
+import Loader from "@/components/ui/Loader";
 
 export default function LandingPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
   const router = useRouter();
+  
   useEffect(() => {
-    setIsVisible(true);
     const checkAuth = async () => {
-      const user = await getCurrentUser();
-      setIsAuthenticated(!!user && !user.is_anonymous);
+      try {
+        const user = await getCurrentUser();
+        setIsAuthenticated(!!user && !user.is_anonymous);
+        
+        if (!!user && !user.is_anonymous) {
+          // User is authenticated, redirect to dashboard
+          router.push("/dashboard");
+        } else {
+          // User is not authenticated, show landing page
+          setLoading(false);
+          setIsVisible(true);
+        }
+      } catch (error) {
+        // If there's an error, show landing page
+        setLoading(false);
+        setIsVisible(true);
+      }
     };
+    
     checkAuth();
-  }, []);
-useEffect(() => {
-    if (isAuthenticated) {
-      router.push("/dashboard");
-    }
-  }, [isAuthenticated]);
+  }, [router]);
+
+  // Show loader while checking authentication
+  if (loading) {
+    return (
+      <Loader/>
+    );
+  }
+
   const features = [
     {
       icon: Stethoscope,

@@ -119,7 +119,6 @@ export async function PUT(request) {
     }
 
     const body = await request.json()
-    console.log('PUT request body:', body)
 
     const {
       reminderId,
@@ -153,9 +152,6 @@ export async function PUT(request) {
     if (isActive !== undefined) updateData.is_active = isActive
     updateData.updated_at = new Date().toISOString()
 
-    console.log('Update data:', updateData)
-    console.log('Updating reminder with ID:', reminderId, 'for user:', user.id)
-
     const { data: reminder, error } = await supabase
       .from('medicine_reminders')
       .update(updateData)
@@ -165,11 +161,8 @@ export async function PUT(request) {
       .single()
 
     if (error) {
-      console.error('Supabase update error:', error)
       throw error
     }
-
-    console.log('Update successful:', reminder)
 
     return NextResponse.json({
       success: true,
@@ -177,7 +170,6 @@ export async function PUT(request) {
     })
 
   } catch (error) {
-    console.error('PUT request error:', error)
     return NextResponse.json(
       { error: error.message || 'Failed to update reminder' },
       { status: 500 }

@@ -95,8 +95,6 @@ export async function POST(request) {
     // Wait for all SOS messages to be sent
     const results = await Promise.all(sosPromises);
 
-    console.log('SMS sending results:', results);
-
     // Check if any SMS was mocked (Twilio not configured)
     const mockResponses = results.filter(r => r.mock);
     if (mockResponses.length > 0) {
@@ -110,7 +108,6 @@ export async function POST(request) {
     // Check if any SMS failed
     const failedResponses = results.filter(r => !r.success);
     if (failedResponses.length > 0) {
-      console.error('Failed SMS responses:', failedResponses);
       return NextResponse.json({
         success: false,
         error: `Failed to send SOS SMS. Details: ${failedResponses.map(r => r.error || 'Unknown error').join(', ')}`,

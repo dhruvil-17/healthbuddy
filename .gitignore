@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# seed and test scripts
+/scripts/*.js
+/scripts/*.json
+!/scripts/healthcare-facilities-sample.json
+
+# root-level testing scripts
+*.mjs
+!eslint.config.mjs
+!next.config.mjs

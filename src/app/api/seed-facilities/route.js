@@ -6,33 +6,42 @@ import path from 'path'
 // Use service role key for seeding (bypasses RLS)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const SEED_SECRET_KEY = process.env.SEED_SECRET_KEY
 
 if (!supabaseUrl || !supabaseServiceKey) {
   throw new Error('Missing Supabase service role credentials')
+}
+
+if (!SEED_SECRET_KEY) {
+  throw new Error('Missing SEED_SECRET_KEY environment variable')
 }
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function POST(request) {
   try {
+    // Verify secret key for additional security
+    const body = await request.json()
+    const { secretKey } = body
+
+    if (secretKey !== SEED_SECRET_KEY) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
     // Read the sample data file
     const dataPath = path.join(process.cwd(), 'scripts', 'healthcare-facilities-sample.json')
     const facilitiesData = JSON.parse(fs.readFileSync(dataPath, 'utf8'))
 
-    console.log(`Loaded ${facilitiesData.length} facilities from JSON file`)
-
     // Clear existing data
-    console.log('Clearing existing healthcare facilities...')
     const { error: deleteError } = await supabase
       .from('healthcare_facilities')
       .delete()
       .neq('id', 0)
 
     if (deleteError) {
-      console.error('Error clearing existing data:', deleteError.message)
-      console.log('Continuing with insert...')
-    } else {
-      console.log('Existing data cleared')
+      // Continue with insert even if clear fails
     }
 
     // Insert facilities in batches
@@ -43,14 +52,11 @@ export async function POST(request) {
       batches.push(facilitiesData.slice(i, i + batchSize))
     }
 
-    console.log(`Inserting ${batches.length} batches...`)
-
     let totalInserted = 0
     let totalErrors = 0
 
     for (let i = 0; i < batches.length; i++) {
       const batch = batches[i]
-      console.log(`Inserting batch ${i + 1}/${batches.length} (${batch.length} facilities)...`)
 
       const { data, error } = await supabase
         .from('healthcare_facilities')
@@ -58,10 +64,8 @@ export async function POST(request) {
         .select()
 
       if (error) {
-        console.error(`Error inserting batch ${i + 1}:`, error.message)
         totalErrors += batch.length
       } else {
-        console.log(`Successfully inserted batch ${i + 1}`)
         totalInserted += data.length
       }
 
@@ -80,9 +84,8 @@ export async function POST(request) {
     })
 
   } catch (error) {
-    console.error('Seeding error:', error)
     return NextResponse.json(
-      { error: 'Failed to seed facilities', details: error.message },
+      { error: 'Failed to seed facilities' },
       { status: 500 }
     )
   }

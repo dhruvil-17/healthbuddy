@@ -42,10 +42,8 @@ export async function POST(req) {
       to,
     });
 
-    console.log('SMS sent successfully:', sms.sid);
     return NextResponse.json({ success: true, sid: sms.sid });
   } catch (err) {
-    console.error('Twilio error:', err);
     return NextResponse.json(
       {
         success: false,

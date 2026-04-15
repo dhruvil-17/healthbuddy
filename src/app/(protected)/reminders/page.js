@@ -119,14 +119,10 @@ export default function MedicineRemindersPage() {
     e.preventDefault();
     if (!user) return;
 
-    console.log('handleSubmit called with:', { formData, editingReminder });
-
     try {
       const method = editingReminder ? 'PUT' : 'POST';
       const payload = { ...formData, userId: user.id };
       if (editingReminder) payload.reminderId = editingReminder.id;
-
-      console.log('Sending request:', { method, payload });
 
       const response = await fetch('/api/medicine-reminders', {
         method,
@@ -134,8 +130,6 @@ export default function MedicineRemindersPage() {
         body: JSON.stringify(payload)
       });
       const data = await response.json();
-
-      console.log('API response:', data);
 
       if (data.success) {
         await loadData(user.id);
@@ -149,7 +143,6 @@ export default function MedicineRemindersPage() {
         });
       }
     } catch (error) {
-      console.error('Error saving reminder:', error);
       toast.error('Save Failed', {
         description: 'Failed to save reminder. Please try again.'
       });
@@ -172,8 +165,6 @@ export default function MedicineRemindersPage() {
 
   const updateMedicineStatus = async (item, status) => {
     if (!user) return;
-
-    console.log('updateMedicineStatus called with:', { item, status });
 
     // Optimistic UI update - update immediately before API call
     const previousLogs = [...todaysSchedule];
@@ -199,22 +190,18 @@ export default function MedicineRemindersPage() {
       });
 
       const data = await response.json();
-      console.log('API response:', data);
 
       if (!response.ok) {
-        console.error('API call failed:', data);
         // Revert optimistic update if API call fails
         setTodaysSchedule(previousLogs);
         toast.error('Update Failed', {
           description: data.error || 'Failed to update medicine status. Please try again.'
         });
       } else {
-        console.log('Status updated successfully');
         // Reload data to ensure persistence
         await loadData(user.id);
       }
     } catch (error) {
-      console.error('Error updating medicine status:', error);
       // Revert optimistic update if error occurs
       setTodayLogs(previousLogs);
       toast.error('Update Failed', {

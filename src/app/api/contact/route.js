@@ -43,9 +43,8 @@ export async function POST(request) {
       .select()
 
     if (error) {
-      console.error('Supabase error:', error)
       return NextResponse.json(
-        { error: 'Failed to save message', details: error.message },
+        { error: 'Failed to save message' },
         { status: 500 }
       )
     }
@@ -57,9 +56,8 @@ export async function POST(request) {
     })
 
   } catch (error) {
-    console.error('Contact API error:', error)
     return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }
