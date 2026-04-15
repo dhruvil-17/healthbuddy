@@ -6,14 +6,9 @@ import path from 'path'
 // Use service role key for seeding (bypasses RLS)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-const SEED_SECRET_KEY = process.env.SEED_SECRET_KEY
 
 if (!supabaseUrl || !supabaseServiceKey) {
   throw new Error('Missing Supabase service role credentials')
-}
-
-if (!SEED_SECRET_KEY) {
-  throw new Error('Missing SEED_SECRET_KEY environment variable')
 }
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
@@ -21,6 +16,15 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
 export async function POST(request) {
   try {
     // Verify secret key for additional security
+    const SEED_SECRET_KEY = process.env.SEED_SECRET_KEY
+    
+    if (!SEED_SECRET_KEY) {
+      return NextResponse.json(
+        { error: 'SEED_SECRET_KEY not configured' },
+        { status: 500 }
+      )
+    }
+
     const body = await request.json()
     const { secretKey } = body
 

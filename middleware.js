@@ -2,36 +2,6 @@ import { createServerClient } from "@supabase/ssr"
 import { NextResponse } from "next/server"
 
 /**
- * Simple in-memory rate limiter
- * In production, use Redis or similar for distributed rate limiting
- */
-const rateLimit = new Map()
-
-function getRateLimitKey(ip) {
-  return `${ip}:${Math.floor(Date.now() / 60000)}` // 1-minute window
-}
-
-function checkRateLimit(ip, limit = 100) {
-  const key = getRateLimitKey(ip)
-  const count = rateLimit.get(key) || 0
-  
-  if (count >= limit) {
-    return false
-  }
-  
-  rateLimit.set(key, count + 1)
-  
-  // Clean up old entries (every 2 minutes)
-  if (count === 0) {
-    setTimeout(() => {
-      rateLimit.delete(key)
-    }, 120000)
-  }
-  
-  return true
-}
-
-/**
  * Middleware for handling session refreshing and protected route access.
  * Required for @supabase/ssr to stay in sync with Server Components.
  */
@@ -44,18 +14,6 @@ export async function middleware(request) {
     return new NextResponse(
       JSON.stringify({ error: 'Request too large' }),
       { status: 413, headers: { 'Content-Type': 'application/json' } }
-    )
-  }
-
-  // Rate limiting (100 requests per minute per IP)
-  const ip = request.headers.get('x-forwarded-for') || 
-             request.headers.get('x-real-ip') || 
-             'unknown'
-  
-  if (!checkRateLimit(ip, 100)) {
-    return new NextResponse(
-      JSON.stringify({ error: 'Too many requests' }),
-      { status: 429, headers: { 'Content-Type': 'application/json' } }
     )
   }
 
