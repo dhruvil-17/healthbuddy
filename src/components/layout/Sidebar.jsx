@@ -2,14 +2,14 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { 
-  BarChart3, 
-  Stethoscope, 
-  MapPin, 
-  Pill, 
-  Users, 
-  UserCircle, 
-  LogOut, 
+import {
+  BarChart3,
+  Stethoscope,
+  MapPin,
+  Pill,
+  Users,
+  UserCircle,
+  LogOut,
   LayoutDashboard,
   Heart,
   ChevronLeft,
@@ -36,6 +36,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     return pathname?.startsWith(href);
   };
 
+  const handleMouseLeave = () => {
+    if (isOpen && window.innerWidth >= 1024) {
+      toggleSidebar();
+    }
+  };
+
   return (
     <>
       {/* Mobile Backdrop */}
@@ -56,6 +62,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
       {/* Sidebar */}
       <aside
+        onMouseLeave={handleMouseLeave}
         className={`
           fixed top-0 left-0 h-screen glass-sidebar z-70 shadow-2xl transition-all duration-500 ease-in-out
           ${isOpen ? "translate-x-0 w-72" : "-translate-x-full lg:translate-x-0 lg:w-20 lg:hover:w-72 group"}

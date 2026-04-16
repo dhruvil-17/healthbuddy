@@ -22,23 +22,23 @@ export default function ProtectedLayout({ children }) {
   return (
     <div className="flex h-screen bg-slate-50/50 overflow-hidden">
       {/* Sidebar Navigation */}
-      <Sidebar 
-        isOpen={isSidebarOpen} 
-        toggleSidebar={toggleSidebar} 
+      <Sidebar
+        isOpen={isSidebarOpen}
+        toggleSidebar={toggleSidebar}
       />
 
       {/* Main Content Area */}
-      <div 
+      <div
         className={`
           flex flex-col flex-1 h-screen transition-all duration-500 ease-in-out
-          lg:pl-20 
+          ${isSidebarOpen ? 'lg:pl-72' : 'lg:pl-20'}
         `}
       >
-        <Navbar 
-          toggleSidebar={toggleSidebar} 
-          userProfile={profile} 
+        <Navbar
+          toggleSidebar={toggleSidebar}
+          userProfile={profile}
         />
-        
+
         <main className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {children}

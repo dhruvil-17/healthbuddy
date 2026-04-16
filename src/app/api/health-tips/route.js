@@ -176,20 +176,24 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit')) || 10
+    const offset = parseInt(searchParams.get('offset')) || 0
     const supabase = await createClient()
 
-    const { data: tips, error } = await supabase
+    const { data: tips, error, count } = await supabase
       .from('health_tips_history')
-      .select('*')
+      .select('*', { count: 'exact' })
       .eq('user_id', user.id) // Strict session-based filter
       .order('created_at', { ascending: false })
-      .limit(limit)
+      .range(offset, offset + limit - 1)
 
     if (error) throw error
 
     return NextResponse.json({
       success: true,
-      data: tips
+      data: tips || [],
+      count: tips?.length || 0,
+      total: count || 0,
+      hasMore: offset + limit < (count || 0)
     })
 
   } catch (error) {
