@@ -363,7 +363,7 @@ export default function FacilityFinderPage() {
                         placeholder="Search by name, address, or type..."
                         value={searchQuery}
                         onChange={e => setSearchQuery(e.target.value)}
-                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3.5 pl-11 pr-4 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all font-medium h-[52px]"
+                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3.5 pl-11 pr-4 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all font-medium h-13"
                       />
                     </div>
                  </div>

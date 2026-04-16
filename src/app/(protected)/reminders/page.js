@@ -274,19 +274,38 @@ export default function MedicineRemindersPage() {
       </section>
 
       {/* Tabs & Controls */}
-      <div className="flex items-center justify-between gap-4">
-         <div className="flex p-1.5 bg-gray-100 rounded-2xl space-x-1">
-            {['today', 'reminders'].map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-6 py-2.5 rounded-xl text-sm font-extrabold uppercase tracking-widest transition-all ${activeTab === tab ? "bg-white text-primary-600 shadow-sm scale-105" : "text-gray-400 hover:text-gray-600"}`}
-              >
-                {tab === 'today' ? "Today's Schedule" : "All Medications"}
-              </button>
-            ))}
+      <div className="space-y-4">
+         <div className="flex items-center justify-between gap-4">
+            <div className="flex p-1.5 bg-gray-100 rounded-2xl space-x-1">
+               {['today', 'reminders'].map(tab => (
+                 <button
+                   key={tab}
+                   onClick={() => setActiveTab(tab)}
+                   className={`px-6 py-2.5 rounded-xl text-sm font-extrabold uppercase tracking-widest transition-all ${activeTab === tab ? "bg-white text-primary-600 shadow-sm scale-105" : "text-gray-400 hover:text-gray-600"}`}
+                 >
+                   {tab === 'today' ? "Today's Schedule" : "All Medications"}
+                 </button>
+               ))}
+            </div>
+            <div className="hidden sm:flex-1 sm:max-w-md sm:block">
+              <Input
+                placeholder="Search medicines..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                icon={Search}
+                className="h-10"
+              />
+            </div>
+            <div className="hidden sm:flex items-center space-x-2 bg-emerald-50 text-emerald-600 px-4 py-2 rounded-xl border border-emerald-100 italic">
+               <TrendingUp className="h-4 w-4" />
+               <span className="text-xs font-bold">
+                 {todaysSchedule.length > 0
+                   ? `${Math.round((todaysSchedule.filter(i => i.status === 'taken').length / todaysSchedule.length) * 100)}% Today's Adherence`
+                   : 'No schedule today'}
+               </span>
+            </div>
          </div>
-         <div className="flex-1 max-w-md">
+         <div className="sm:hidden">
            <Input
              placeholder="Search medicines..."
              value={searchQuery}
@@ -294,14 +313,6 @@ export default function MedicineRemindersPage() {
              icon={Search}
              className="h-10"
            />
-         </div>
-         <div className="hidden sm:flex items-center space-x-2 bg-emerald-50 text-emerald-600 px-4 py-2 rounded-xl border border-emerald-100 italic">
-            <TrendingUp className="h-4 w-4" />
-            <span className="text-xs font-bold">
-              {todaysSchedule.length > 0
-                ? `${Math.round((todaysSchedule.filter(i => i.status === 'taken').length / todaysSchedule.length) * 100)}% Today's Adherence`
-                : 'No schedule today'}
-            </span>
          </div>
       </div>
 
