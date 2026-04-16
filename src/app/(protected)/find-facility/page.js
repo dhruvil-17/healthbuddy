@@ -528,7 +528,7 @@ export default function FacilityFinderPage() {
                                <Button
                                  variant="ghost"
                                  onClick={() => callFacility(f)}
-                                 className="h-10 px-4 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all font-bold uppercase tracking-widest text-[11px]"
+                                 className="h-10 px-4 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-green-600 transition-all font-bold uppercase tracking-widest text-[11px]"
                                  leftIcon={Phone}
                                >
                                  Call
