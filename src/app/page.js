@@ -117,6 +117,9 @@ export default function LandingPage() {
               <Link href="/register" className="hidden sm:block">
                 <Button>Get Started</Button>
               </Link>
+              <Link href="/register" className="block sm:hidden">
+                <Button size="sm">Sign Up</Button>
+              </Link>
             </>
           )}
         </div>
