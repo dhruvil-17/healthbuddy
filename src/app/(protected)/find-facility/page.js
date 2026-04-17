@@ -628,7 +628,14 @@ export default function FacilityFinderPage() {
                  <div className="flex gap-3">
                     <Button
                       variant="ghost"
-                      className="bg-red-800 text-white hover:bg-white/10 px-8 h-12 rounded-xl font-bold border-white/20"
+                      className="bg-white text-red-600 hover:bg-red-600 hover:text-white  px-8 h-12 rounded-xl font-bold border-white/20"
+                      onClick={() => window.location.href = 'tel:102'}
+                    >
+                      Call 102
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="bg-white text-red-600 hover:bg-red-600 hover:text-white px-8 h-12 rounded-xl font-bold border-white/20"
                       onClick={() => setShowSOSModal(true)}
                       isLoading={isSosLoading}
                     >
