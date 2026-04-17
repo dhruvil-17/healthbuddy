@@ -42,6 +42,7 @@ export default function FacilityFinderPage() {
   const [facilityType, setFacilityType] = useState("all");
   const [radius, setRadius] = useState(10);
   const [showSOSModal, setShowSOSModal] = useState(false);
+  const [isSosLoading, setIsSosLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'map'
   const [userLocation, setUserLocation] = useState(null);
@@ -78,6 +79,55 @@ export default function FacilityFinderPage() {
     { value: "diagnostic_center", label: "Diagnostics", icon: Info },
     { value: "emergency", label: "Emergency", icon: AlertCircle },
   ];
+
+  const confirmSOSDispatch = async () => {
+    setIsSosLoading(true);
+    setShowSOSModal(false);
+    try {
+      let payloadData = { latitude: null, longitude: null };
+
+      const executeDispatch = async () => {
+        const response = await fetch('/api/sos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payloadData),
+        });
+        const data = await response.json();
+        if (data.success) {
+          toast.success('SOS Dispatched', {
+            description: 'Emergency signal sent to your contacts.'
+          });
+        } else {
+          toast.error('SOS Failed', {
+            description: data.error || 'Failed to dispatch SOS signal.'
+          });
+        }
+      };
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            payloadData.latitude = position.coords.latitude;
+            payloadData.longitude = position.coords.longitude;
+            await executeDispatch();
+            setIsSosLoading(false);
+          },
+          async () => {
+            await executeDispatch();
+            setIsSosLoading(false);
+          }
+        );
+      } else {
+        await executeDispatch();
+        setIsSosLoading(false);
+      }
+    } catch (error) {
+      setIsSosLoading(false);
+      toast.error('SOS Failed', {
+        description: 'Failed to dispatch SOS signal.'
+      });
+    }
+  };
 
   // Filter facilities by search query
   const filteredFacilities = facilities.filter(facility =>
@@ -576,21 +626,16 @@ export default function FacilityFinderPage() {
                     <p className="text-sm font-medium text-red-100 max-w-sm italic">Connect immediately to {selectedCity || "local"} paramedics and trauma centers.</p>
                  </div>
                  <div className="flex gap-3">
-                    <a href="tel:102" className="no-underline">
-                      <Button variant="primary" className="bg-red-800 text-white hover:bg-white/10 px-8 h-12 rounded-xl font-bold border-white/20">
-                        Call 102
-                      </Button>
-                    </a>
                     <Button
                       variant="ghost"
                       className="bg-red-800 text-white hover:bg-white/10 px-8 h-12 rounded-xl font-bold border-white/20"
                       onClick={() => setShowSOSModal(true)}
+                      isLoading={isSosLoading}
                     >
                       Trigger SOS
                     </Button>
                  </div>
               </div>
-              <Activity className="absolute right-12 bottom-[-20%] h-32 w-32 text-white/5 opacity-50 rotate-12" />
            </GlassCard>
         </div>
       </div>
@@ -598,11 +643,7 @@ export default function FacilityFinderPage() {
       <ConfirmModal
         isOpen={showSOSModal}
         onClose={() => setShowSOSModal(false)}
-        onConfirm={() => {
-          toast.warning('SOS Triggered', {
-            description: '🚨 SOS triggered! Location shared with emergency services and contacts.'
-          });
-        }}
+        onConfirm={confirmSOSDispatch}
         title="Trigger Emergency SOS"
         description={`Are you sure you want to trigger SOS in ${selectedCity || 'your area'}? This will share your location with emergency services and your emergency contacts.`}
         confirmText="Trigger SOS"

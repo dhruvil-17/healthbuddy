@@ -90,24 +90,60 @@ export default function RegisterPage() {
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary-100 rounded-full blur-[120px] -mr-48 -mt-48 opacity-50" />
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent-100 rounded-full blur-[120px] -ml-48 -mb-48 opacity-50" />
         
-        <GlassCard className="max-w-md w-full p-12 text-center space-y-8 relative z-10 border-transparent shadow-2xl">
+        <GlassCard className="max-w-lg w-full p-10 text-center space-y-8 relative z-10 border-transparent shadow-2xl">
           <div className="flex justify-center">
-            <div className="h-20 w-20 bg-emerald-100 rounded-[2rem] flex items-center justify-center animate-bounce shadow-lg shadow-emerald-500/20">
-              <CheckCircle2 className="h-10 w-10 text-emerald-600" />
+            <div className="h-24 w-24 bg-emerald-100 rounded-[2rem] flex items-center justify-center animate-bounce shadow-lg shadow-emerald-500/20">
+              <Mail className="h-12 w-12 text-emerald-600" />
             </div>
           </div>
+          
           <div className="space-y-4">
-            <h2 className="text-3xl font-black text-gray-900 italic tracking-tight">Verify Your Account</h2>
+            <h2 className="text-3xl font-black text-gray-900 italic tracking-tight">Check Your Inbox!</h2>
             <p className="text-gray-500 font-medium leading-relaxed">
-              We&apos;ve sent a secure confirmation link to <span className="text-primary-600 font-extrabold">{formData.email}</span>. Please check your inbox and verify your email to continue.
+              We've sent a confirmation link to:
             </p>
+            <div className="bg-primary-50 border-2 border-primary-200 rounded-2xl p-4 mx-4">
+              <p className="text-primary-700 font-black text-lg break-all">{formData.email}</p>
+            </div>
           </div>
-          <div className="pt-6">
+
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-left space-y-3">
+            <p className="text-amber-800 font-black text-sm uppercase tracking-wider flex items-center">
+              <AlertCircle className="h-5 w-5 mr-2" />
+              Important Steps:
+            </p>
+            <ol className="space-y-3 text-gray-700 font-medium text-sm">
+              <li className="flex items-start">
+                <span className="bg-amber-200 text-amber-800 w-6 h-6 rounded-full flex items-center justify-center font-black text-xs mr-3 flex-shrink-0 mt-0.5">1</span>
+                <span>Open your email inbox</span>
+              </li>
+              <li className="flex items-start">
+                <span className="bg-amber-200 text-amber-800 w-6 h-6 rounded-full flex items-center justify-center font-black text-xs mr-3 flex-shrink-0 mt-0.5">2</span>
+                <span>Find the email from <strong>HealthBuddy</strong></span>
+              </li>
+              <li className="flex items-start">
+                <span className="bg-amber-200 text-amber-800 w-6 h-6 rounded-full flex items-center justify-center font-black text-xs mr-3 flex-shrink-0 mt-0.5">3</span>
+                <span>Click the <strong>"Verify Email"</strong> button</span>
+              </li>
+              <li className="flex items-start">
+                <span className="bg-amber-200 text-amber-800 w-6 h-6 rounded-full flex items-center justify-center font-black text-xs mr-3 flex-shrink-0 mt-0.5">4</span>
+                <span>Check your <strong>spam folder</strong> if you don't see it within 2 minutes</span>
+              </li>
+            </ol>
+          </div>
+
+          <div className="space-y-4 pt-4">
+            <p className="text-gray-400 text-sm font-medium">
+              After verifying, you'll be automatically redirected to complete your profile.
+            </p>
             <Link href="/login">
               <Button variant="primary" className="w-full h-14 rounded-2xl font-black italic shadow-xl shadow-primary-500/20" rightIcon={ArrowRight}>
-                Proceed to Login
+                I've Verified My Email - Continue
               </Button>
             </Link>
+            <p className="text-gray-400 text-xs">
+              Didn't receive the email? Check your spam folder or try registering again.
+            </p>
           </div>
         </GlassCard>
       </div>

@@ -29,12 +29,15 @@ import GlassCard from '@/components/ui/GlassCard';
 import Badge from '@/components/ui/Badge';
 import Skeleton from '@/components/ui/Skeleton';
 import Avatar from '@/components/ui/Avatar';
+import { ConfirmModal } from '@/components/ui/Modal';
 
 export default function HealthTips() {
   const [healthTips, setHealthTips] = useState(null);
   const [generating, setGenerating] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('general');
   const [expandedSections, setExpandedSections] = useState({ general: true, conditions: true, diet: true, exercise: true });
+  const [isSosLoading, setIsSosLoading] = useState(false);
+  const [showSOSModal, setShowSOSModal] = useState(false);
   const router = useRouter();
   const { profile, loading } = useProtectedProfile();
 
@@ -69,6 +72,59 @@ export default function HealthTips() {
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  const handleSosDispatch = () => {
+    setShowSOSModal(true);
+  };
+
+  const confirmSOSDispatch = async () => {
+    setIsSosLoading(true);
+    setShowSOSModal(false);
+    try {
+      let payloadData = { latitude: null, longitude: null };
+
+      const executeDispatch = async () => {
+        const response = await fetch('/api/sos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payloadData),
+        });
+        const data = await response.json();
+        if (data.success) {
+          toast.success('SOS Dispatched', {
+            description: 'Emergency signal sent to your contacts.'
+          });
+        } else {
+          toast.error('SOS Failed', {
+            description: data.error || 'Failed to dispatch SOS signal.'
+          });
+        }
+      };
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            payloadData.latitude = position.coords.latitude;
+            payloadData.longitude = position.coords.longitude;
+            await executeDispatch();
+            setIsSosLoading(false);
+          },
+          async () => {
+            await executeDispatch();
+            setIsSosLoading(false);
+          }
+        );
+      } else {
+        await executeDispatch();
+        setIsSosLoading(false);
+      }
+    } catch (error) {
+      setIsSosLoading(false);
+      toast.error('SOS Failed', {
+        description: 'Failed to dispatch SOS signal.'
+      });
+    }
   };
 
   const getPriorityVariant = (priority) => {
@@ -300,12 +356,8 @@ export default function HealthTips() {
                     <Button
                       variant="danger"
                       className="px-6 h-12 rounded-xl font-extrabold"
-                      onClick={() => {
-                        toast.warning('Emergency SOS', {
-                          description: '🚨 EMERGENCY SOS ACTIVATED! Signal sent to contacts + authorities.'
-                        });
-                        router.push('/dashboard');
-                      }}
+                      onClick={handleSosDispatch}
+                      isLoading={isSosLoading}
                     >
                       SOS Alert
                     </Button>
@@ -314,6 +366,18 @@ export default function HealthTips() {
            )}
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showSOSModal}
+        onClose={() => setShowSOSModal(false)}
+        onConfirm={confirmSOSDispatch}
+        title="Send Emergency SOS"
+        description="Are you sure you want to send an SOS signal to your emergency contacts? Your location will be shared with them."
+        confirmText="Send SOS"
+        cancelText="Cancel"
+        variant="danger"
+        isDestructive={true}
+      />
     </div>
   );
 }
