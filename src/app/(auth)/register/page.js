@@ -67,9 +67,49 @@ export default function RegisterPage() {
       )
       
       if (authError) {
-        setError(authError.message)
+        // Check if error is about user already registered
+        if (authError.message?.toLowerCase().includes('already') || 
+            authError.message?.toLowerCase().includes('registered') ||
+            authError.message?.toLowerCase().includes('exists')) {
+          setError('This email is already registered. Please sign in instead.')
+        } else {
+          setError(authError.message)
+        }
       } else {
-        // If Supabase returns a session, we redirect to onboarding immediately
+        // Check if user was actually created (data.user should exist)
+        if (!data?.user && !data?.session) {
+          setError('Failed to create account. Please try again.')
+          setLoading(false)
+          return
+        }
+        
+        // Check if user has a recovery_sent_at (indicates existing user who may need password reset)
+        if (data?.user?.recovery_sent_at) {
+          setError('This email is already registered. Please sign in or use forgot password to reset your password.')
+          setLoading(false)
+          return
+        }
+        
+        // Check if identities array is empty (indicates existing user without identity)
+        // New users should have an identity object in the array
+        if (data?.user?.identities && data.user.identities.length === 0) {
+          setError('This email is already registered. Please sign in instead.')
+          setLoading(false)
+          return
+        }
+        
+        // Check if user was created more than 1 minute ago (indicates existing user)
+        const userCreatedAt = new Date(data?.user?.created_at);
+        const now = new Date();
+        const timeDiff = (now - userCreatedAt) / 1000; // difference in seconds
+        
+        if (timeDiff > 60) {
+          setError('This email is already registered. Please sign in instead.')
+          setLoading(false)
+          return
+        }
+        
+        // If session exists, redirect to onboarding immediately
         // If session is null (email confirmation required), we show success state
         if (data?.session) {
           router.push('/onboarding')
@@ -92,7 +132,7 @@ export default function RegisterPage() {
         
         <GlassCard className="max-w-lg w-full p-10 text-center space-y-8 relative z-10 border-transparent shadow-2xl">
           <div className="flex justify-center">
-            <div className="h-24 w-24 bg-emerald-100 rounded-[2rem] flex items-center justify-center animate-bounce shadow-lg shadow-emerald-500/20">
+            <div className="h-24 w-24 bg-emerald-100 rounded-3xl flex items-center justify-center animate-bounce shadow-lg shadow-emerald-500/20">
               <Mail className="h-12 w-12 text-emerald-600" />
             </div>
           </div>
@@ -114,19 +154,19 @@ export default function RegisterPage() {
             </p>
             <ol className="space-y-3 text-gray-700 font-medium text-sm">
               <li className="flex items-start">
-                <span className="bg-amber-200 text-amber-800 w-6 h-6 rounded-full flex items-center justify-center font-black text-xs mr-3 flex-shrink-0 mt-0.5">1</span>
+                <span className="bg-amber-200 text-amber-800 w-6 h-6 rounded-full flex items-center justify-center font-black text-xs mr-3 shrink-0 mt-0.5">1</span>
                 <span>Open your email inbox</span>
               </li>
               <li className="flex items-start">
-                <span className="bg-amber-200 text-amber-800 w-6 h-6 rounded-full flex items-center justify-center font-black text-xs mr-3 flex-shrink-0 mt-0.5">2</span>
+                <span className="bg-amber-200 text-amber-800 w-6 h-6 rounded-full flex items-center justify-center font-black text-xs mr-3 shrink-0 mt-0.5">2</span>
                 <span>Find the email from <strong>HealthBuddy</strong></span>
               </li>
               <li className="flex items-start">
-                <span className="bg-amber-200 text-amber-800 w-6 h-6 rounded-full flex items-center justify-center font-black text-xs mr-3 flex-shrink-0 mt-0.5">3</span>
+                <span className="bg-amber-200 text-amber-800 w-6 h-6 rounded-full flex items-center justify-center font-black text-xs mr-3 shrink-0 mt-0.5">3</span>
                 <span>Click the <strong>"Verify Email"</strong> button</span>
               </li>
               <li className="flex items-start">
-                <span className="bg-amber-200 text-amber-800 w-6 h-6 rounded-full flex items-center justify-center font-black text-xs mr-3 flex-shrink-0 mt-0.5">4</span>
+                <span className="bg-amber-200 text-amber-800 w-6 h-6 rounded-full flex items-center justify-center font-black text-xs mr-3 shrink-0 mt-0.5">4</span>
                 <span>Check your <strong>spam folder</strong> if you don't see it within 2 minutes</span>
               </li>
             </ol>
@@ -162,7 +202,7 @@ export default function RegisterPage() {
             <div className="bg-primary-600 p-2.5 rounded-2xl shadow-lg shadow-primary-500/30 group-hover:scale-110 transition-transform duration-300">
               <Heart className="h-6 w-6 text-white" />
             </div>
-            <span className="text-2xl font-extrabold bg-gradient-to-r from-primary-700 to-accent-600 bg-clip-text text-transparent italic tracking-tight">
+            <span className="text-2xl font-extrabold bg-linear-to-r from-primary-700 to-accent-600 bg-clip-text text-transparent italic tracking-tight">
               HealthBuddy
             </span>
           </Link>
@@ -213,7 +253,7 @@ export default function RegisterPage() {
               />
               <button
                 type="button"
-                className="absolute right-4 top-[38px] text-gray-400 hover:text-primary-600 transition-colors"
+                className="absolute right-4 top-9.5 text-gray-400 hover:text-primary-600 transition-colors"
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >

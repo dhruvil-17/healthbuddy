@@ -98,7 +98,7 @@ export default function LandingPage() {
           <div className="bg-primary-600 p-2.5 rounded-2xl shadow-lg shadow-primary-500/30 group-hover:scale-110 transition-transform duration-300">
             <Heart className="h-6 w-6 text-white" />
           </div>
-          <span className="text-2xl font-extrabold bg-gradient-to-r from-primary-700 to-accent-600 bg-clip-text text-transparent italic">
+          <span className="text-2xl font-extrabold bg-linear-to-r from-primary-700 to-accent-600 bg-clip-text text-transparent italic">
             HealthBuddy
           </span>
         </div>
@@ -136,7 +136,7 @@ export default function LandingPage() {
             
             <h1 className="text-5xl sm:text-7xl font-extrabold text-gray-900 leading-[1.1] tracking-tight">
               Your AI Powered <br />
-              <span className="bg-gradient-to-r from-primary-600 via-accent-500 to-emerald-500 bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-primary-600 via-accent-500 to-emerald-500 bg-clip-text text-transparent">
                 Health Companion
               </span>
             </h1>
@@ -173,7 +173,7 @@ export default function LandingPage() {
           </div>
 
           <div className={`relative transition-all duration-1000 delay-500 ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
-            <div className="relative z-10 rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white/50 backdrop-blur-sm aspect-square">
+            <div className="relative z-10 rounded-3xl overflow-hidden shadow-2xl border-8 border-white/50 backdrop-blur-sm aspect-square">
               <Image
                 src="/images/hero_bg.png"
                 alt="HealthBuddy AI-powered healthcare monitoring dashboard showing symptom analysis, medicine reminders, and emergency SOS features"
@@ -226,7 +226,7 @@ export default function LandingPage() {
         <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
           {features.map((f, i) => (
             <GlassCard key={i} className="group cursor-pointer p-10 bg-slate-50/50 hover:bg-white border-transparent hover:border-primary-100">
-              <div className={`w-16 h-16 bg-gradient-to-br ${f.color} rounded-[2rem] flex items-center justify-center mb-8 shadow-lg shadow-primary-500/20 group-hover:scale-110 transition-transform duration-500`}>
+              <div className={`w-16 h-16 bg-linear-to-br ${f.color} rounded-[2rem] flex items-center justify-center mb-8 shadow-lg shadow-primary-500/20 group-hover:scale-110 transition-transform duration-500`}>
                 <f.icon className="h-8 w-8 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-primary-600 transition-colors">{f.title}</h3>

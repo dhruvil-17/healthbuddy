@@ -5,7 +5,7 @@ import { useProtectedProfile } from '@/hooks/useProtectedProfile';
 import Loader from '@/components/ui/Loader';
 import { useRouter } from 'next/navigation';
 import { ProfileEditPage } from '@/components/ProfileEditPage';
-import { User, MapPin, Calendar, Languages, Phone, Heart, Edit, ArrowLeft } from 'lucide-react';
+import { User, MapPin, Calendar, Languages, Phone, Heart, Edit, ArrowLeft, Lock } from 'lucide-react';
 import GlassCard from '@/components/ui/GlassCard';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -217,6 +217,14 @@ export default function ProfilePage() {
                 leftIcon={Edit}
               >
                 Edit Profile
+              </Button>
+              <Button
+                variant="secondary"
+                className="w-full h-12 rounded-2xl font-bold"
+                onClick={() => router.push('/change-password')}
+                leftIcon={Lock}
+              >
+                Change Password
               </Button>
               <Button
                 variant="ghost"

@@ -20,7 +20,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { useProtectedProfile } from "@/hooks/useProtectedProfile";
-import { toast } from "sonner";
+import { useSOS } from "@/hooks/useSOS";
 import Button from "@/components/ui/Button";
 import GlassCard from "@/components/ui/GlassCard";
 import Badge from "@/components/ui/Badge";
@@ -32,63 +32,17 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user, profile, loading: profileLoading } = useProtectedProfile();
   const [stats, setStats] = useState(null);
-  const [isSosLoading, setIsSosLoading] = useState(false);
   const [loadingStats, setLoadingStats] = useState(true);
   const [showSOSModal, setShowSOSModal] = useState(false);
+  const { dispatchSOS, isSosLoading } = useSOS();
 
   const handleSosDispatch = () => {
     setShowSOSModal(true);
   };
 
   const confirmSOSDispatch = async () => {
-    setIsSosLoading(true);
-    try {
-      let location = null;
-      // Extract precise geolocation natively
-      let payloadData = { latitude: null, longitude: null };
-
-      const executeDispatch = async () => {
-        const response = await fetch('/api/sos', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payloadData),
-        });
-        const data = await response.json();
-        if (data.success) {
-          toast.success('SOS Dispatched', {
-            description: 'Emergency signal sent to your contacts.'
-          });
-        } else {
-          toast.error('SOS Failed', {
-            description: data.error || 'Failed to dispatch SOS signal.'
-          });
-        }
-      };
-
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          async (position) => {
-            payloadData.latitude = position.coords.latitude;
-            payloadData.longitude = position.coords.longitude;
-            await executeDispatch();
-            setIsSosLoading(false);
-          },
-          async () => {
-            // Proceed without location if error occurs or user denies
-            await executeDispatch();
-            setIsSosLoading(false);
-          }
-        );
-      } else {
-        await executeDispatch();
-        setIsSosLoading(false);
-      }
-    } catch (error) {
-      setIsSosLoading(false);
-      toast.error('SOS Failed', {
-        description: 'Failed to dispatch SOS signal.'
-      });
-    }
+    setShowSOSModal(false);
+    await dispatchSOS();
   };
 
   useEffect(() => {
@@ -208,10 +162,10 @@ export default function DashboardPage() {
               : "No medication reminders scheduled for tonight. Have a restful evening!"}
           </p>
           <div className="pt-4 flex flex-wrap gap-4">
-            <Button variant="secondary" onClick={() => router.push("/symptom-checker")} className="h-12 px-8 rounded-xl font-black italic">
+            <Button variant="secondary" onClick={() => router.push("/symptom-checker")} className="h-12 px-8 rounded-xl font-black italic" aria-label="Start new symptom analysis">
               New Symptoms Analysis
             </Button>
-            <Button variant="ghost" className="h-12 px-6 text-white hover:bg-white/10 font-bold" onClick={() => router.push("/health-tips")} rightIcon={ChevronRight}>
+            <Button variant="ghost" className="h-12 px-6 text-white hover:bg-white/10 font-bold" onClick={() => router.push("/health-tips")} rightIcon={ChevronRight} aria-label="View daily health tips">
               Daily Health Tips
             </Button>
           </div>
@@ -259,6 +213,9 @@ export default function DashboardPage() {
                 key={i} 
                 className="group cursor-pointer p-8 relative overflow-hidden bg-slate-50/50 border-transparent hover:bg-white"
                 onClick={() => router.push(action.href)}
+                role="button"
+                tabIndex={0}
+                onKeyPress={(e) => e.key === 'Enter' && router.push(action.href)}
               >
                 <div className={`h-16 w-16 ${action.color} rounded-2xl flex items-center justify-center p-4 mb-6 text-white shadow-xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6`}>
                   <action.icon className="h-full w-full" />
@@ -369,6 +326,7 @@ export default function DashboardPage() {
               leftIcon={AlertCircle}
               isLoading={isSosLoading}
               onClick={handleSosDispatch}
+              aria-label="Generate emergency SOS signal to contacts"
             >
               GENERATE SOS SIGNAL
             </Button>

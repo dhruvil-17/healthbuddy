@@ -23,7 +23,7 @@ import {
   Lightbulb
 } from 'lucide-react';
 import { useProtectedProfile } from '@/hooks/useProtectedProfile';
-import { toast } from "sonner";
+import { useSOS } from '@/hooks/useSOS';
 import Button from '@/components/ui/Button';
 import GlassCard from '@/components/ui/GlassCard';
 import Badge from '@/components/ui/Badge';
@@ -36,10 +36,10 @@ export default function HealthTips() {
   const [generating, setGenerating] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('general');
   const [expandedSections, setExpandedSections] = useState({ general: true, conditions: true, diet: true, exercise: true });
-  const [isSosLoading, setIsSosLoading] = useState(false);
   const [showSOSModal, setShowSOSModal] = useState(false);
   const router = useRouter();
   const { profile, loading } = useProtectedProfile();
+  const { dispatchSOS, isSosLoading } = useSOS();
 
   const categories = [
     { id: 'general', name: 'General', icon: Heart, color: 'bg-red-100 text-red-600' },
@@ -79,52 +79,8 @@ export default function HealthTips() {
   };
 
   const confirmSOSDispatch = async () => {
-    setIsSosLoading(true);
     setShowSOSModal(false);
-    try {
-      let payloadData = { latitude: null, longitude: null };
-
-      const executeDispatch = async () => {
-        const response = await fetch('/api/sos', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payloadData),
-        });
-        const data = await response.json();
-        if (data.success) {
-          toast.success('SOS Dispatched', {
-            description: 'Emergency signal sent to your contacts.'
-          });
-        } else {
-          toast.error('SOS Failed', {
-            description: data.error || 'Failed to dispatch SOS signal.'
-          });
-        }
-      };
-
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          async (position) => {
-            payloadData.latitude = position.coords.latitude;
-            payloadData.longitude = position.coords.longitude;
-            await executeDispatch();
-            setIsSosLoading(false);
-          },
-          async () => {
-            await executeDispatch();
-            setIsSosLoading(false);
-          }
-        );
-      } else {
-        await executeDispatch();
-        setIsSosLoading(false);
-      }
-    } catch (error) {
-      setIsSosLoading(false);
-      toast.error('SOS Failed', {
-        description: 'Failed to dispatch SOS signal.'
-      });
-    }
+    await dispatchSOS();
   };
 
   const getPriorityVariant = (priority) => {
@@ -139,7 +95,7 @@ export default function HealthTips() {
   if (loading) {
     return (
       <div className="space-y-8 animate-pulse pt-4">
-        <Skeleton className="h-44 w-full rounded-[2.5rem]" />
+        <Skeleton className="h-44 w-full rounded-3xl" />
         <div className="grid lg:grid-cols-4 gap-10">
           <Skeleton className="lg:col-span-1 h-96 w-full" />
           <div className="lg:col-span-3 space-y-6">
@@ -154,7 +110,7 @@ export default function HealthTips() {
   return (
     <div className="space-y-10 pb-20">
       {/* Header Banner */}
-      <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-emerald-600 to-teal-700 p-8 sm:p-12 text-white shadow-2xl shadow-emerald-500/20">
+      <section className="relative overflow-hidden rounded-3xl bg-linear-to-br from-emerald-600 to-teal-700 p-8 sm:p-12 text-white shadow-2xl shadow-emerald-500/20">
         <div className="relative z-10 space-y-4 max-w-2xl">
           <Badge variant="glass" className="bg-white/20 border-white/30 text-white font-extrabold uppercase tracking-widest text-[10px]">
              Daily Wellness Intelligence
@@ -173,6 +129,7 @@ export default function HealthTips() {
                onClick={() => generateHealthTips(profile?.id)}
                isLoading={generating}
                leftIcon={RefreshCw}
+               aria-label="Refresh health tips"
              >
                 Regenerate Tips
              </Button>
@@ -200,6 +157,8 @@ export default function HealthTips() {
                      key={cat.id}
                      onClick={() => setSelectedCategory(cat.id)}
                      className={`w-full flex items-center p-4 rounded-2xl transition-all duration-300 ${selectedCategory === cat.id ? "bg-primary-600 text-white shadow-xl shadow-primary-500/20 scale-105" : "bg-gray-50 text-gray-500 hover:bg-gray-100"}`}
+                     aria-label={`Select ${cat.name} category`}
+                     aria-pressed={selectedCategory === cat.id}
                    >
                      <cat.icon className={`h-5 w-5 mr-3 ${selectedCategory === cat.id ? "text-white" : cat.color.split(' ')[1]}`} />
                      <span className="font-bold">{cat.name}</span>
@@ -323,7 +282,7 @@ export default function HealthTips() {
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-24 space-y-6">
-                   <div className="p-8 bg-slate-50 rounded-[2.5rem] inline-block mx-auto">
+                   <div className="p-8 bg-slate-50 rounded-3xl inline-block mx-auto">
                       <Info className="h-12 w-12 text-slate-300" />
                    </div>
                    <h3 className="text-xl font-extrabold text-gray-900">No Intelligence Found</h3>

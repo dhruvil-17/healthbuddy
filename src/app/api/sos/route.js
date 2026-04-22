@@ -7,6 +7,12 @@ if (!process.env.NEXT_PUBLIC_BASE_URL) {
   console.warn('NEXT_PUBLIC_BASE_URL not configured, using default: http://localhost:3000');
 }
 
+// Simple in-memory rate limiter to prevent SOS abuse
+// In production, use Redis or a proper rate limiting service
+const sosRateLimit = new Map();
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute in milliseconds
+const MAX_SOS_PER_WINDOW = 1; // Max 1 SOS per minute per user
+
 // Helper function to format phone number to E.164 standard
 // Note: This assumes Indian numbers (+91) by default. For international support,
 // users should enter phone numbers with their country code in the profile.
@@ -23,6 +29,37 @@ const formatPhoneNumber = (phone) => {
   return phone;
 };
 
+// Rate limiter check function
+const checkRateLimit = (userId) => {
+  const now = Date.now();
+  const userRequests = sosRateLimit.get(userId) || [];
+
+  // Filter out requests older than the rate limit window
+  const recentRequests = userRequests.filter(timestamp => now - timestamp < RATE_LIMIT_WINDOW);
+
+  if (recentRequests.length >= MAX_SOS_PER_WINDOW) {
+    return false; // Rate limit exceeded
+  }
+
+  // Add current request timestamp
+  recentRequests.push(now);
+  sosRateLimit.set(userId, recentRequests);
+
+  // Clean up old entries periodically (optional optimization)
+  if (Math.random() < 0.01) {
+    for (const [uid, timestamps] of sosRateLimit.entries()) {
+      const filtered = timestamps.filter(t => now - t < RATE_LIMIT_WINDOW);
+      if (filtered.length === 0) {
+        sosRateLimit.delete(uid);
+      } else {
+        sosRateLimit.set(uid, filtered);
+      }
+    }
+  }
+
+  return true; // Request allowed
+};
+
 export async function POST(request) {
   try {
     const user = await getSessionUser()
@@ -31,6 +68,14 @@ export async function POST(request) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
+      )
+    }
+
+    // Check rate limit
+    if (!checkRateLimit(user.id)) {
+      return NextResponse.json(
+        { error: 'Too many SOS requests. Please wait before trying again.' },
+        { status: 429 }
       )
     }
 

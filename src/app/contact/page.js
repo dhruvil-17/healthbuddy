@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Mail, Phone, MapPin, Send, MessageSquare } from "lucide-react";
 import GlassCard from "@/components/ui/GlassCard";
+import { toast } from "sonner";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -12,9 +13,11 @@ export default function ContactPage() {
     message: ""
   });
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     
     try {
       const response = await fetch('/api/contact', {
@@ -32,16 +35,21 @@ export default function ContactPage() {
         setFormData({ name: "", email: "", subject: "", message: "" });
         setTimeout(() => setSubmitted(false), 5000);
       } else {
-        alert('Failed to send message: ' + (data.error || 'Unknown error'));
+        toast.error('Failed to send message', {
+          description: data.error || 'Unknown error'
+        });
       }
     } catch (error) {
-      console.error('Error submitting form:', error);
-      alert('Failed to send message. Please try again.');
+      toast.error('Failed to send message', {
+        description: 'Please try again later.'
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-indigo-50 py-12 px-6 sm:px-12">
+    <div className="min-h-screen bg-linear-to-br from-violet-50 via-white to-indigo-50 py-12 px-6 sm:px-12">
       <div className="max-w-6xl mx-auto">
         <Link href="/" className="inline-flex items-center text-violet-600 hover:text-violet-700 font-bold mb-8 transition-colors">
           <ArrowLeft className="h-5 w-5 mr-2" />
@@ -120,59 +128,80 @@ export default function ContactPage() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">Name</label>
+                      <label htmlFor="contact-name" className="block text-sm font-bold text-gray-700 mb-2">Name</label>
                       <input
+                        id="contact-name"
                         type="text"
                         required
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
                         placeholder="Your name"
+                        aria-required="true"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">Email</label>
+                      <label htmlFor="contact-email" className="block text-sm font-bold text-gray-700 mb-2">Email</label>
                       <input
+                        id="contact-email"
                         type="email"
                         required
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
                         placeholder="your@email.com"
+                        aria-required="true"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Subject</label>
+                    <label htmlFor="contact-subject" className="block text-sm font-bold text-gray-700 mb-2">Subject</label>
                     <input
+                      id="contact-subject"
                       type="text"
                       required
                       value={formData.subject}
                       onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                       className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
                       placeholder="How can we help?"
+                      aria-required="true"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Message</label>
+                    <label htmlFor="contact-message" className="block text-sm font-bold text-gray-700 mb-2">Message</label>
                     <textarea
+                      id="contact-message"
                       required
                       value={formData.message}
                       onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                       rows={6}
                       className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all resize-none"
                       placeholder="Tell us more about your inquiry..."
+                      aria-required="true"
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-4 px-6 rounded-xl transition-all flex items-center justify-center space-x-2"
+                    disabled={isSubmitting}
+                    className="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-4 px-6 rounded-xl transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Send className="h-5 w-5" />
-                    <span>Send Message</span>
+                    {isSubmitting ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Sending...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-5 w-5" />
+                        <span>Send Message</span>
+                      </>
+                    )}
                   </button>
                 </form>
               )}

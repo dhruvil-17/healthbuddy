@@ -25,7 +25,7 @@ import {
   Plus
 } from "lucide-react";
 import { useProtectedUser } from "@/hooks/useProtectedUser";
-import { toast } from "sonner";
+import { useSOS } from "@/hooks/useSOS";
 import Button from "@/components/ui/Button";
 import GlassCard from "@/components/ui/GlassCard";
 import { ConfirmModal } from "@/components/ui/Modal";
@@ -42,7 +42,6 @@ export default function FacilityFinderPage() {
   const [facilityType, setFacilityType] = useState("all");
   const [radius, setRadius] = useState(10);
   const [showSOSModal, setShowSOSModal] = useState(false);
-  const [isSosLoading, setIsSosLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'map'
   const [userLocation, setUserLocation] = useState(null);
@@ -55,6 +54,7 @@ export default function FacilityFinderPage() {
   const scrollTimeoutRef = React.useRef(null);
   const router = useRouter();
   const { user, loading: autLoading } = useProtectedUser();
+  const { dispatchSOS, isSosLoading } = useSOS();
 
   const availableCities = [
     { value: "", label: "Select a city", lat: null, lng: null },
@@ -81,52 +81,8 @@ export default function FacilityFinderPage() {
   ];
 
   const confirmSOSDispatch = async () => {
-    setIsSosLoading(true);
     setShowSOSModal(false);
-    try {
-      let payloadData = { latitude: null, longitude: null };
-
-      const executeDispatch = async () => {
-        const response = await fetch('/api/sos', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payloadData),
-        });
-        const data = await response.json();
-        if (data.success) {
-          toast.success('SOS Dispatched', {
-            description: 'Emergency signal sent to your contacts.'
-          });
-        } else {
-          toast.error('SOS Failed', {
-            description: data.error || 'Failed to dispatch SOS signal.'
-          });
-        }
-      };
-
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          async (position) => {
-            payloadData.latitude = position.coords.latitude;
-            payloadData.longitude = position.coords.longitude;
-            await executeDispatch();
-            setIsSosLoading(false);
-          },
-          async () => {
-            await executeDispatch();
-            setIsSosLoading(false);
-          }
-        );
-      } else {
-        await executeDispatch();
-        setIsSosLoading(false);
-      }
-    } catch (error) {
-      setIsSosLoading(false);
-      toast.error('SOS Failed', {
-        description: 'Failed to dispatch SOS signal.'
-      });
-    }
+    await dispatchSOS();
   };
 
   // Filter facilities by search query
@@ -630,6 +586,7 @@ export default function FacilityFinderPage() {
                       variant="ghost"
                       className="bg-white text-red-600 hover:bg-red-600 hover:text-white  px-8 h-12 rounded-xl font-bold border-white/20"
                       onClick={() => window.location.href = 'tel:102'}
+                      aria-label="Call emergency services 102"
                     >
                       Call 102
                     </Button>
@@ -638,6 +595,7 @@ export default function FacilityFinderPage() {
                       className="bg-white text-red-600 hover:bg-red-600 hover:text-white px-8 h-12 rounded-xl font-bold border-white/20"
                       onClick={() => setShowSOSModal(true)}
                       isLoading={isSosLoading}
+                      aria-label="Trigger emergency SOS to contacts"
                     >
                       Trigger SOS
                     </Button>
