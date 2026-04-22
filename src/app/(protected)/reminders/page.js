@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import {
@@ -66,16 +66,16 @@ export default function MedicineRemindersPage() {
   ];
 
   // Filter reminders based on search query
-  const filteredReminders = reminders.filter(reminder =>
+  const filteredReminders = useMemo(() => reminders.filter(reminder =>
     reminder.medicine_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     reminder.dosage.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ), [reminders, searchQuery]);
 
   // Filter today's schedule based on search query
-  const filteredTodayLogs = todaysSchedule.filter(log =>
+  const filteredTodayLogs = useMemo(() => todaysSchedule.filter(log =>
     log.reminder.medicine_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     log.reminder.dosage.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ), [todaysSchedule, searchQuery]);
 
   const loadData = async (userId) => {
     setLoading(true);

@@ -3,7 +3,7 @@
 import { Bell, Search, User, Menu, Heart } from "lucide-react";
 import Avatar from "../ui/Avatar";
 import Button from "../ui/Button";
-import {useState} from "react";
+import {useState, useCallback} from "react";
 import {useRouter} from "next/navigation";
 
 const Navbar = ({ toggleSidebar, userProfile }) => {
@@ -15,6 +15,14 @@ const Navbar = ({ toggleSidebar, userProfile }) => {
     { id: 3, title: "Health tip updated", time: "Yesterday", type: "tip" }
   ];
   const router = useRouter();
+
+  const handleToggleNotifications = useCallback(() => {
+    setShowNotifications(prev => !prev);
+  }, []);
+
+  const handleAvatarClick = useCallback(() => {
+    router.push("/profile");
+  }, [router]);
   return (
     <nav className="glass-nav sticky top-0 z-50 h-20 px-6 sm:px-10 flex items-center justify-between">
       {/* Mobile Toggle & Logo */}
@@ -34,9 +42,9 @@ const Navbar = ({ toggleSidebar, userProfile }) => {
 
       {/* Right Actions */}
       <div className="flex items-center space-x-4">
-<button 
+        <button 
           className="relative p-2.5 rounded-xl bg-gray-50 text-gray-500 hover:bg-primary-50 hover:text-primary-600 transition-all duration-300 group"
-          onClick={() => setShowNotifications(!showNotifications)}
+          onClick={handleToggleNotifications}
         >
           <Bell className="h-6 w-6" />
           <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-red-500 border-2 border-white group-hover:scale-110" />
@@ -79,7 +87,7 @@ const Navbar = ({ toggleSidebar, userProfile }) => {
             name={userProfile?.full_name} 
             size="md" 
             className="cursor-pointer border-2 border-white shadow-md ring-1 ring-gray-100"
-            onClick={() => router.push("/profile")}
+            onClick={handleAvatarClick}
             
           />
         </div>

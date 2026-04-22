@@ -1,12 +1,12 @@
-import React from "react";
+import React, { useMemo } from "react";
 
-const Avatar = ({ src, name, size = "md", className = "", ...props }) => {
-  const initials = name
+const Avatar = React.memo(({ src, name, size = "md", className = "", ...props }) => {
+  const initials = useMemo(() => name
     ?.split(" ")
     .map((n) => n[0])
     .join("")
     .toUpperCase()
-    .slice(0, 2);
+    .slice(0, 2), [name]);
 
   const sizes = {
     sm: "h-8 w-8 text-xs",
@@ -40,6 +40,8 @@ const Avatar = ({ src, name, size = "md", className = "", ...props }) => {
       <div className="absolute inset-0 border-2 border-white/20 rounded-2xl pointer-events-none" />
     </div>
   );
-};
+});
+
+Avatar.displayName = "Avatar";
 
 export default Avatar;

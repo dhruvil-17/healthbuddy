@@ -78,7 +78,7 @@ export default function SymptomCheckerPage() {
         setLoadingMore(false);
       }
     }
-  }, [user, page]);
+  }, [user, page, setPage, setHistory, setHasMore, setLoadingMore]);
 
   useEffect(() => {
     fetchHistory(true);

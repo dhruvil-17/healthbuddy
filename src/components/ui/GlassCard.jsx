@@ -1,6 +1,6 @@
 import React from "react";
 
-const GlassCard = ({ children, className = "", hover = true, ...props }) => {
+const GlassCard = React.memo(({ children, className = "", hover = true, ...props }) => {
   return (
     <div 
       className={`glass-card rounded-3xl p-6 transition-all duration-500 ${
@@ -11,6 +11,8 @@ const GlassCard = ({ children, className = "", hover = true, ...props }) => {
       {children}
     </div>
   );
-};
+});
+
+GlassCard.displayName = "GlassCard";
 
 export default GlassCard;

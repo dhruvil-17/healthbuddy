@@ -54,7 +54,7 @@ export function useProtectedProfile() {
     }
 
     fetchProfile()
-  }, [user, userLoading, router])
+  }, [user, userLoading])
 
 
   return { user, profile, loading, setProfile }

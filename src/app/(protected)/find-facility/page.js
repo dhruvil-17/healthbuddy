@@ -136,7 +136,7 @@ export default function FacilityFinderPage() {
         setLoadingMore(false);
       }
     }
-  }, [user?.id, selectedCity, facilityType, radius, page]);
+  }, [user?.id, selectedCity, facilityType, radius, page, setLoading, setPage, setFacilities, setHasMore, setLoadingMore]);
 
   const loadMore = React.useCallback(() => {
     if (!loadingMore && hasMore && selectedCity && !isScrollingRef.current) {

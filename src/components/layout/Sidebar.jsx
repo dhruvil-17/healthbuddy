@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -22,25 +22,34 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const pathname = usePathname();
   const router = useRouter();
 
-  const navItems = [
+  const navItems = useMemo(() => [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Symptom Checker", href: "/symptom-checker", icon: Stethoscope },
     { name: "Facility Finder", href: "/find-facility", icon: MapPin },
     { name: "Medicine Reminders", href: "/reminders", icon: Pill },
     { name: "Health Tips", href: "/health-tips", icon: Users },
     { name: "My Profile", href: "/profile", icon: UserCircle },
-  ];
+  ], []);
 
-  const isActive = (href) => {
+  const isActive = useCallback((href) => {
     if (href === "/dashboard") return pathname === "/dashboard";
     return pathname?.startsWith(href);
-  };
+  }, [pathname]);
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = useCallback(() => {
     if (isOpen && window.innerWidth >= 1024) {
       toggleSidebar();
     }
-  };
+  }, [isOpen, toggleSidebar]);
+
+  const handleNavItemClick = useCallback(() => {
+    toggleSidebar();
+  }, [toggleSidebar]);
+
+  const handleSignOut = useCallback(async () => {
+    await signOut();
+    router.push("/login");
+  }, [router]);
 
   return (
     <>
@@ -87,7 +96,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
               <Link 
                 key={item.href} 
                 href={item.href}
-                onClick={() => toggleSidebar()}
+                onClick={handleNavItemClick}
                 className={`
                   flex items-center space-x-3 px-3 py-3.5 rounded-2xl transition-all duration-300 group/nav lg:justify-start
                   ${isActive(item.href) 
@@ -115,10 +124,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           {/* Bottom Actions */}
           <div className="mt-auto px-1 pt-4 border-t border-white/20">
             <button 
-              onClick={async () => {
-                await signOut();
-                router.push("/login");
-              }}
+              onClick={handleSignOut}
               className="flex items-center justify-center space-x-3 w-full px-3 py-3 rounded-2xl text-red-500 hover:bg-red-50 transition-all duration-300 group/logout lg:justify-start"
             >
               <LogOut className="h-6 w-6 shrink-0 group-logout-hover:scale-110" />
