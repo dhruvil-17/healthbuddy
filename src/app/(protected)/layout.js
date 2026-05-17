@@ -4,10 +4,12 @@ import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
 import { useProtectedProfile } from "@/hooks/useProtectedProfile";
 import Loader from "@/components/ui/Loader";
+import { usePathname } from "next/navigation";
 
 export default function ProtectedLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { user, profile, loading } = useProtectedProfile();
+  const pathname = usePathname();
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -17,6 +19,12 @@ export default function ProtectedLayout({ children }) {
         <Loader />
       </div>
     );
+  }
+
+  const isOnboarding = pathname === "/onboarding";
+
+  if (isOnboarding) {
+    return <>{children}</>;
   }
 
   return (

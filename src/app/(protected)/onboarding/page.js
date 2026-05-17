@@ -234,7 +234,7 @@ export default function OnboardingPage() {
             )}
           </div>
 
-          <div className="pt-6 sm:pt-10 flex items-center justify-between border-t border-gray-100">
+          <div className="pt-6 sm:pt-10 flex items-center justify-between gap-2 border-t border-gray-100">
             <Button 
               variant="ghost" 
               onClick={handleBack} 
