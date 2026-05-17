@@ -47,7 +47,7 @@ export const Modal = ({
 
       {/* Modal */}
       <div
-        className={`relative ${sizeClasses[size]} ${variantColors[variant]} rounded-3xl shadow-2xl p-8 w-full animate-in zoom-in-95 duration-200`}
+        className={`relative ${sizeClasses[size]} ${variantColors[variant]} rounded-3xl shadow-2xl p-8 w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 custom-scrollbar`}
       >
         {showCloseButton && (
           <button
@@ -58,7 +58,7 @@ export const Modal = ({
           </button>
         )}
 
-        <div className="flex flex-col items-center text-center space-y-4">
+        <div className="flex flex-col items-center text-center space-y-4 w-full">
           {variantIcons[variant] && (
             <div className="p-4 bg-gray-50 rounded-full">
               {variantIcons[variant]}

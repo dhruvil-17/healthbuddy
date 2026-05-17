@@ -156,6 +156,7 @@ Be specific and practical.`;
     })
 
   } catch (error) {
+    console.error("Health Tips POST API Error:", error);
     return NextResponse.json(
       { error: 'Failed to generate health tips' },
       { status: 500 }
@@ -197,6 +198,7 @@ export async function GET(request) {
     })
 
   } catch (error) {
+    console.error("Health Tips GET API Error:", error);
     return NextResponse.json(
       { error: 'Failed to fetch health tips history' },
       { status: 500 }

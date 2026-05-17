@@ -88,3 +88,90 @@ Respond ONLY with a valid JSON object in this format:
 
   return generateStructuredAI(prompt);
 };
+
+/**
+ * Generic function to generate conversational (text) content from AI via OpenRouter.
+ * @param {string} systemPrompt - The system context prompt.
+ * @param {Array} messages - The previous message history in chat format.
+ * @param {string} modelName - OpenRouter model to use.
+ * @returns {Promise<string>} - Assistant's text response.
+ */
+export const generateConversationalAI = async (systemPrompt, messages = [], modelName = "openai/gpt-4o-mini") => {
+  const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+
+  if (!OPENROUTER_API_KEY) {
+    console.warn('OpenRouter API key not configured. AI features will not work.');
+    throw new Error("OpenRouter API key is missing");
+  }
+
+  try {
+    const formattedMessages = [
+      { role: "system", content: systemPrompt },
+      ...messages
+    ];
+
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "HTTP-Referer": "https://healthbuddy.ai",
+        "X-Title": "HealthBuddy AI Assistant",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: modelName,
+        messages: formattedMessages
+      })
+    });
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        throw new Error("429: AI service is temporarily reaching capacity. Please try again in a few minutes.");
+      }
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(`OpenRouter Error ${response.status}: ${errData.error?.message || "Unknown Error"}`);
+    }
+
+    const result = await response.json();
+    return result.choices?.[0]?.message?.content || "";
+  } catch (error) {
+    if (error.status === 429 || error.message?.includes('429') || error.message?.includes('quota')) {
+      const quotaError = new Error("AI service is temporarily reaching capacity. Please try again in a few minutes.");
+      quotaError.status = 429;
+      throw quotaError;
+    }
+    throw error;
+  }
+};
+
+/**
+ * Generate conversational responses for symptom chat checks.
+ * @param {string} symptoms - Original symptoms description.
+ * @param {Object} initialAnalysis - The initial AI JSON analysis.
+ * @param {Array} chatHistory - Array of messages: [{role: 'user'|'assistant', content: ''}]
+ * @param {Object} profile - User profile.
+ * @returns {Promise<string>}
+ */
+export const symptomChatCompletion = async (symptoms, initialAnalysis, chatHistory, profile) => {
+  const systemPrompt = `You are a professional, compassionate healthcare AI assistant on the HealthBuddy platform.
+  
+Patient Profile Context:
+- Age: ${profile?.age || "Not specified"}
+- Gender: ${profile?.gender || "Not specified"}
+- Existing Conditions: ${profile?.existing_conditions?.join(", ") || "None specified"}
+- Location: ${profile?.location || "Not specified"}
+- Preferred Language: ${profile?.preferred_language || "English"}
+
+Original Symptom Check Context:
+- Patient Symptoms: "${symptoms}"
+- Initial AI Analysis Findings: ${JSON.stringify(initialAnalysis)}
+
+Your Goal:
+1. Provide extremely helpful, clear, and reassuring answers to the patient's follow-up questions about this specific symptom check.
+2. Maintain a highly professional and empathetic medical tone.
+3. Keep your responses structured, clear, and easy to read using clean paragraphs and bullet points if needed.
+4. **CRITICAL**: Maintain a strong medical safety warning. If the user reports new or escalating severe/emergency symptoms (like chest pain, severe shortness of breath, sudden numbness, etc.), instruct them immediately to seek urgent care.
+5. Provide a brief disclaimer at the end if relevant, reminding them that you are an AI assistant and not a substitute for professional medical care.`;
+
+  return generateConversationalAI(systemPrompt, chatHistory);
+};

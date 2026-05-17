@@ -64,6 +64,7 @@ export async function POST(request) {
     })
 
   } catch (error) {
+    console.error("Symptom Checker API Error:", error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
