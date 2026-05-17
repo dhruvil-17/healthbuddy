@@ -57,8 +57,8 @@ export async function POST(request) {
       gender: profileData.gender || null,
       location: profileData.location?.trim() || null,
       preferred_language: profileData.preferred_language || profileData.language || 'English',
-      emergency_contact_name: profileData.emergency_contact_name?.trim() || null,
-      emergency_contact_phone: profileData.emergency_contact_phone?.trim() || null,
+      emergency_contact_name: (profileData.emergency_contact_name || profileData.emergencyContactName)?.trim() || null,
+      emergency_contact_phone: (profileData.emergency_contact_phone || profileData.emergencyContactPhone)?.trim() || null,
       existing_conditions: Array.isArray(profileData.existing_conditions || profileData.conditions)
         ? (profileData.existing_conditions || profileData.conditions)
         : [],

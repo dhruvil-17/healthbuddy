@@ -68,6 +68,8 @@ export default function OnboardingPage() {
         language: formData.preferredLanguage,
         emergencyContactName: formData.emergencyContactName,
         emergencyContactPhone: formData.emergencyContactPhone,
+        emergency_contact_name: formData.emergencyContactName,
+        emergency_contact_phone: formData.emergencyContactPhone,
         location: formData.location
       });
 
@@ -84,19 +86,19 @@ export default function OnboardingPage() {
   if (autLoading) return <div className="h-screen flex items-center justify-center bg-gray-50"><Loader /></div>;
 
   return (
-    <div className="min-h-screen bg-linear-to-r from-primary-50 to-violet-50 flex items-center justify-center p-4 sm:p-8 relative overflow-hidden">
+    <div className="min-h-screen bg-linear-to-r from-primary-50 to-violet-50 flex items-center justify-center p-1 sm:p-8 relative overflow-hidden">
       {/* Background blur elements */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-primary-200/20 rounded-full blur-[100px] -mr-48 -mt-48 animate-pulse-slow" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent-200/20 rounded-full blur-[100px] -ml-48 -mb-48 animate-glow" />
 
-      <div className="w-full max-w-4xl grid lg:grid-cols-5 gap-10 items-center relative z-10">
+      <div className="w-full max-w-4xl grid lg:grid-cols-5 gap-6 lg:gap-10 items-center relative z-10">
         {/* Progress Sidebar */}
-        <div className="lg:col-span-2 space-y-8 lg:pr-10">
+        <div className="lg:col-span-2 space-y-5 lg:space-y-8 lg:pr-10">
           <Badge variant="primary" className="py-2 px-4 shadow-lg shadow-primary-500/10">
             <Sparkles className="h-4 w-4 mr-2 text-primary-500" />
             Healthcare Revolution
           </Badge>
-          <h1 className="text-4xl sm:text-6xl font-extrabold text-gray-900 leading-[1.1]">
+          <h1 className="text-3xl sm:text-6xl font-extrabold text-gray-900 leading-[1.1]">
             Let&apos;s build your <br />
             <span className="bg-gradient-to-r from-primary-600 to-accent-500 bg-clip-text text-transparent">Health Profile</span>
           </h1>
@@ -104,7 +106,7 @@ export default function OnboardingPage() {
             Welcome to HealthBuddy. Completing these steps helps us provide personalized AI insights tailored to your needs.
           </p>
 
-          <div className="space-y-6 pt-4">
+          <div className="space-y-4 lg:space-y-6 pt-2 lg:pt-4">
             {[
               { id: 1, title: "Identity", desc: "Basic details about you" },
               { id: 2, title: "Wellness", desc: "Your medical background" },
@@ -132,7 +134,7 @@ export default function OnboardingPage() {
         </div>
 
         {/* Step Content */}
-        <GlassCard className="lg:col-span-3 p-8 sm:p-12 border-transparent shadow-2xl ring-1 ring-gray-100 min-h-125 flex flex-col">
+        <GlassCard className="lg:col-span-3 p-4 sm:p-12 border-transparent shadow-2xl ring-1 ring-gray-100 min-h-125 flex flex-col">
           <div className="flex-1 space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
             {step === 1 && (
               <div className="space-y-8">
@@ -140,7 +142,7 @@ export default function OnboardingPage() {
                    <div className="p-3 bg-primary-100 rounded-2xl text-primary-600"><User className="h-6 w-6" /></div>
                    <h2 className="text-2xl font-extrabold text-gray-900">Personal Details</h2>
                 </div>
-                <div className="grid sm:grid-cols-2 gap-8">
+                <div className="grid sm:grid-cols-2 gap-4 sm:gap-8">
                   <Input 
                     label="How old are you?" 
                     type="number" 
@@ -185,7 +187,7 @@ export default function OnboardingPage() {
                    <h2 className="text-2xl font-extrabold text-gray-900">Medical History</h2>
                 </div>
                 <p className="text-sm font-bold text-gray-400 uppercase tracking-widest pl-1">Select all that apply</p>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {conditions.map(c => (
                     <button
                       key={c}
@@ -205,7 +207,7 @@ export default function OnboardingPage() {
                    <div className="p-3 bg-accent-100 rounded-2xl text-accent-600"><ShieldCheck className="h-6 w-6" /></div>
                    <h2 className="text-2xl font-extrabold text-gray-900">Safety & Access</h2>
                 </div>
-                <div className="grid gap-8">
+                <div className="grid gap-4 sm:gap-8">
                   <Input 
                     label="Emergency Contact Name" 
                     value={formData.emergencyContactName} 
@@ -232,7 +234,7 @@ export default function OnboardingPage() {
             )}
           </div>
 
-          <div className="pt-10 flex items-center justify-between border-t border-gray-100">
+          <div className="pt-6 sm:pt-10 flex items-center justify-between border-t border-gray-100">
             <Button 
               variant="ghost" 
               onClick={handleBack} 

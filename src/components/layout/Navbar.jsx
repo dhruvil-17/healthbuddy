@@ -24,7 +24,7 @@ const Navbar = ({ toggleSidebar, userProfile }) => {
     router.push("/profile");
   }, [router]);
   return (
-    <nav className="glass-nav sticky top-0 z-50 h-20 px-6 sm:px-10 flex items-center justify-between">
+    <nav className="glass-nav sticky top-0 z-50 h-20 px-4 sm:px-10 flex items-center justify-between">
       {/* Mobile Toggle & Logo */}
       <div className="flex items-center space-x-4">
         <button 

@@ -35,7 +35,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="space-y-10 pb-20">
-        <section className="relative overflow-hidden rounded-3xl bg-linear-to-br from-primary-600 to-indigo-700 p-8 sm:p-12 text-white shadow-2xl shadow-primary-500/20">
+        <section className="relative overflow-hidden rounded-3xl bg-linear-to-br from-primary-600 to-indigo-700 p-5 sm:p-12 text-white shadow-2xl shadow-primary-500/20">
           <div className="space-y-4">
             <Skeleton className="h-20 w-20 rounded-2xl bg-white/20" />
             <Skeleton className="h-12 w-64 bg-white/20" />
@@ -45,7 +45,7 @@ export default function ProfilePage() {
 
         <div className="grid lg:grid-cols-3 gap-10">
           <div className="lg:col-span-2 space-y-8">
-            <GlassCard className="p-10 border-transparent shadow-xl ring-1 ring-gray-100">
+            <GlassCard className="p-4 sm:p-10 border-transparent shadow-xl ring-1 ring-gray-100">
               <Skeleton className="h-8 w-48 mb-8" />
               <div className="grid sm:grid-cols-2 gap-8">
                 <Skeleton className="h-12 w-full" />
@@ -56,7 +56,7 @@ export default function ProfilePage() {
               </div>
             </GlassCard>
 
-            <GlassCard className="p-10 border-transparent shadow-xl ring-1 ring-gray-100">
+            <GlassCard className="p-4 sm:p-10 border-transparent shadow-xl ring-1 ring-gray-100">
               <Skeleton className="h-8 w-48 mb-8" />
               <div className="space-y-6">
                 <Skeleton className="h-12 w-full" />
@@ -64,7 +64,7 @@ export default function ProfilePage() {
               </div>
             </GlassCard>
 
-            <GlassCard className="p-10 border-transparent shadow-xl ring-1 ring-gray-100 bg-red-50/30">
+            <GlassCard className="p-4 sm:p-10 border-transparent shadow-xl ring-1 ring-gray-100 bg-red-50/30">
               <Skeleton className="h-8 w-48 mb-6" />
               <div className="flex flex-wrap gap-2">
                 <Skeleton className="h-10 w-24" />
@@ -95,7 +95,7 @@ export default function ProfilePage() {
     return (
       <div className="space-y-10 pb-20">
         {/* Header Banner */}
-        <section className="relative overflow-hidden rounded-3xl bg-linear-to-br from-primary-600 to-indigo-700 p-8 sm:p-12 text-white shadow-2xl shadow-primary-500/20">
+        <section className="relative overflow-hidden rounded-3xl bg-linear-to-br from-primary-600 to-indigo-700 p-5 sm:p-12 text-white shadow-2xl shadow-primary-500/20">
           <div className="relative z-10 space-y-4 max-w-2xl flex flex-col md:flex-row items-center space-x-8">
             <Avatar name={profile?.full_name} size="xl" className="border-4 border-white/20" />
             <div className="space-y-3">
@@ -118,7 +118,7 @@ export default function ProfilePage() {
         <div className="grid lg:grid-cols-3 gap-10">
           <div className="lg:col-span-2 space-y-8">
             {/* Basic Info */}
-            <GlassCard className="p-10 border-transparent shadow-xl ring-1 ring-gray-100">
+            <GlassCard className="p-4 sm:p-10 border-transparent shadow-xl ring-1 ring-gray-100">
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-2xl font-extrabold text-gray-900 flex items-center">
                   <User className="h-6 w-6 mr-3 text-primary-600" />
@@ -158,7 +158,7 @@ export default function ProfilePage() {
             </GlassCard>
 
             {/* Emergency Contact */}
-            <GlassCard className="p-10 border-transparent shadow-xl ring-1 ring-gray-100">
+            <GlassCard className="p-4 sm:p-10 border-transparent shadow-xl ring-1 ring-gray-100">
               <h2 className="text-2xl font-extrabold text-gray-900 mb-8 flex items-center">
                 <Phone className="h-6 w-6 mr-3 text-red-500" />
                 Emergency Contact
@@ -177,7 +177,7 @@ export default function ProfilePage() {
             </GlassCard>
 
             {/* Medical Conditions */}
-            <GlassCard className="p-10 border-transparent shadow-xl ring-1 ring-gray-100 bg-red-50/30">
+            <GlassCard className="p-4 sm:p-10 border-transparent shadow-xl ring-1 ring-gray-100 bg-red-50/30">
               <h2 className="text-2xl font-extrabold text-gray-900 mb-6 flex items-center">
                 <Heart className="h-6 w-6 mr-3 text-red-500" />
                 Medical Conditions

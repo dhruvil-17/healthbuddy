@@ -136,7 +136,7 @@ export const ProfileEditPage = ({ initialProfile, onSave, onCancel }) => {
   return (
     <div className="space-y-10 pb-20">
       {/* Header Banner */}
-      <section className="relative overflow-hidden rounded-3xl bg-linear-to-br from-primary-600 to-indigo-700 p-8 sm:p-12 text-white shadow-2xl shadow-primary-500/20">
+      <section className="relative overflow-hidden rounded-3xl bg-linear-to-br from-primary-600 to-indigo-700 p-5 sm:p-12 text-white shadow-2xl shadow-primary-500/20">
         <div className="relative z-10 space-y-4 max-w-2xl flex flex-col md:flex-row items-center space-x-8">
            {/* <Avatar name={initialProfile?.full_name} size="xl" className="hidden md:flex border-4 border-white/20" /> */}
            <div className="space-y-3">
@@ -159,12 +159,12 @@ export const ProfileEditPage = ({ initialProfile, onSave, onCancel }) => {
       <div className="grid lg:grid-cols-3 gap-10">
         <div className="lg:col-span-2 space-y-8">
           {/* Basic Info */}
-          <GlassCard className="p-10 border-transparent shadow-xl ring-1 ring-gray-100">
+          <GlassCard className="p-4 sm:p-10 border-transparent shadow-xl ring-1 ring-gray-100">
             <h2 className="text-2xl font-extrabold text-gray-900 mb-8 flex items-center">
               <Info className="h-6 w-6 mr-3 text-primary-600" />
               Basic Information
             </h2>
-            <div className="grid sm:grid-cols-2 gap-8">
+            <div className="grid sm:grid-cols-2 gap-4 sm:gap-8">
               <Input
                 label="Age"
                 type="number"
@@ -225,7 +225,7 @@ export const ProfileEditPage = ({ initialProfile, onSave, onCancel }) => {
             </div>
           </GlassCard>
 
-          <GlassCard className="p-10 border-transparent shadow-xl ring-1 ring-gray-100">
+          <GlassCard className="p-4 sm:p-10 border-transparent shadow-xl ring-1 ring-gray-100">
             <h2 className="text-2xl font-extrabold text-gray-900 mb-8 flex items-center">
               <Phone className="h-6 w-6 mr-3 text-red-500" />
               Emergency Contact
@@ -257,7 +257,7 @@ export const ProfileEditPage = ({ initialProfile, onSave, onCancel }) => {
 
         {/* Sidebar Actions & Medical Conditions */}
         <div className="space-y-8">
-          <GlassCard className="p-8 border-transparent shadow-xl ring-1 ring-gray-100 bg-red-50/30">
+          <GlassCard className="p-4 sm:p-8 border-transparent shadow-xl ring-1 ring-gray-100 bg-red-50/30">
             <h2 className="text-xl font-extrabold text-gray-900 mb-6 flex items-center">
               <Heart className="h-6 w-6 mr-3 text-red-500" />
               Medical Conditions
@@ -307,7 +307,7 @@ export const ProfileEditPage = ({ initialProfile, onSave, onCancel }) => {
                 Discard Changes
              </Button>
 
-             <GlassCard className="p-8 mt-10 bg-primary-900 text-white border-transparent" hover={false}>
+             <GlassCard className="p-4 sm:p-8 mt-10 bg-primary-900 text-white border-transparent" hover={false}>
                 <div className="flex items-center space-x-3 mb-4">
                   <Sparkles className="h-5 w-5 text-primary-300" />
                   <span className="font-extrabold uppercase tracking-widest text-[10px]">Security Tip</span>

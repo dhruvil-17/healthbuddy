@@ -218,7 +218,7 @@ export default function SymptomCheckerPage() {
   return (
     <div className="space-y-10 pb-20">
       {/* Header Banner */}
-      <section className="relative overflow-hidden rounded-3xl bg-linear-to-br from-violet-600 to-purple-700 p-8 sm:p-12 text-white shadow-2xl shadow-violet-500/20">
+      <section className="relative overflow-hidden rounded-3xl bg-linear-to-br from-violet-600 to-purple-700 p-5 sm:p-12 text-white shadow-2xl shadow-violet-500/20">
         <div className="relative z-10 space-y-4 max-w-2xl">
           <Badge variant="glass" className="bg-white/20 border-white/30 text-white">
             <Sparkles className="h-3.5 w-3.5 mr-2" />
@@ -252,7 +252,7 @@ export default function SymptomCheckerPage() {
       <div className="grid lg:grid-cols-3 gap-10">
         <div className="lg:col-span-2 space-y-10">
           {/* Form */}
-          <GlassCard className="p-10 border-transparent shadow-xl ring-1 ring-gray-100">
+          <GlassCard className="p-4 sm:p-10 border-transparent shadow-xl ring-1 ring-gray-100">
             <h2 className="text-2xl font-extrabold text-gray-900 mb-8 flex items-center">
               <Activity className="h-6 w-6 mr-3 text-violet-600" />
               Describe Symptoms
@@ -284,7 +284,7 @@ export default function SymptomCheckerPage() {
 
           {/* Analysis Results Display */}
           {result && (
-            <GlassCard className="p-10 border-transparent shadow-2xl animate-in fade-in slide-in-from-top-8 duration-700">
+            <GlassCard className="p-4 sm:p-10 border-transparent shadow-2xl animate-in fade-in slide-in-from-top-8 duration-700">
                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-10 gap-4">
                   <h3 className="text-2xl font-extrabold text-gray-900">Analysis Insights</h3>
                   <Badge variant={getSeverityVariant(result.severity)} className="py-2 px-5 text-sm uppercase tracking-wider font-extrabold">
